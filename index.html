@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PublishFlow Pro</title>
+<style>
+:root {
+  --bg: #0f0f11;
+  --bg2: #18181c;
+  --bg3: #222228;
+  --bg4: #2a2a32;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #f0f0f2;
+  --text2: #9999aa;
+  --text3: #6666777;
+  --accent: #7c6af7;
+  --accent2: #6355e0;
+  --accent-bg: rgba(124,106,247,0.12);
+  --green: #22c55e;
+  --green-bg: rgba(34,197,94,0.12);
+  --amber: #f59e0b;
+  --amber-bg: rgba(245,158,11,0.12);
+  --red: #ef4444;
+  --red-bg: rgba(239,68,68,0.12);
+  --blue: #3b82f6;
+  --blue-bg: rgba(59,130,246,0.12);
+  --radius: 10px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; font-size: 14px; line-height: 1.5; }
+
+/* Layout */
+.app { display: flex; height: 100vh; overflow: hidden; }
+.sidebar { width: 220px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+.main { flex: 1; overflow-y: auto; background: var(--bg); }
+
+/* Sidebar */
+.logo { padding: 20px; border-bottom: 1px solid var(--border); }
+.logo-mark { display: flex; align-items: center; gap: 10px; }
+.logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.logo-text { font-size: 15px; font-weight: 700; color: var(--text); }
+.logo-sub { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+
+nav { padding: 12px 8px; flex: 1; }
+.nav-section { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); padding: 8px 12px 4px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; color: var(--text2); font-size: 13px; transition: all 0.15s; margin-bottom: 2px; }
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 500; }
+.nav-icon { width: 18px; text-align: center; font-size: 15px; }
+.nav-badge { margin-left: auto; background: var(--accent); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 600; }
+
+.sidebar-footer { padding: 12px; border-top: 1px solid var(--border); }
+.user-card { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; cursor: pointer; }
+.user-card:hover { background: var(--bg3); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-size: 11px; color: var(--text2); }
+
+/* Page */
+.page { display: none; padding: 28px 32px; }
+.page.active { display: block; }
+.page-header { margin-bottom: 28px; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--text); }
+.page-sub { color: var(--text2); font-size: 14px; margin-top: 4px; }
+
+/* Cards */
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border2); }
+.btn-secondary:hover { background: var(--bg4); }
+.btn-ghost { background: transparent; color: var(--text2); }
+.btn-ghost:hover { background: var(--bg3); color: var(--text); }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+.btn-success { background: var(--green-bg); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+
+/* Form */
+.form-group { margin-bottom: 16px; }
+label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+input, textarea, select { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; color: var(--text); font-size: 13px; padding: 9px 12px; outline: none; font-family: inherit; transition: border 0.15s; }
+input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+select option { background: var(--bg3); }
+
+/* Grid */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+/* Stats */
+.stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; }
+.stat-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.stat-value { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
+.stat-change { font-size: 12px; margin-top: 6px; }
+.stat-up { color: var(--green); }
+.stat-down { color: var(--red); }
+
+/* Badge */
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.badge-purple { background: var(--accent-bg); color: var(--accent); }
+.badge-green { background: var(--green-bg); color: var(--green); }
+.badge-amber { background: var(--amber-bg); color: var(--amber); }
+.badge-red { background: var(--red-bg); color: var(--red); }
+.badge-blue { background: var(--blue-bg); color: var(--blue); }
+.badge-gray { background: var(--bg3); color: var(--text2); }
+
+/* Platform icons */
+.platform-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.yt { background: #ff0000; }
+.tt { background: #010101; border: 1px solid #69c9d0; }
+.fb { background: #1877f2; }
+.ig { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+
+/* Tabs */
+.tabs { display: flex; gap: 4px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; margin-bottom: 20px; }
+.tab { flex: 1; padding: 8px; border-radius: 7px; text-align: center; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--text2); transition: all 0.15s; }
+.tab.active { background: var(--bg4); color: var(--text); }
+.tab:hover:not(.active) { background: var(--bg3); }
+
+/* Upload zone */
+.upload-zone { border: 2px dashed var(--border2); border-radius: var(--radius); padding: 32px; text-align: center; cursor: pointer; transition: all 0.15s; }
+.upload-zone:hover { border-color: var(--accent); background: var(--accent-bg); }
+.upload-zone.has-file { border-style: solid; border-color: var(--green); background: var(--green-bg); }
+.upload-icon { font-size: 32px; margin-bottom: 8px; }
+.upload-hint { font-size: 12px; color: var(--text2); margin-top: 6px; }
+
+/* Platform checkboxes */
+.platform-toggle { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.15s; margin-bottom: 8px; }
+.platform-toggle:hover { border-color: var(--border2); }
+.platform-toggle.selected { border-color: var(--accent); background: var(--accent-bg); }
+.platform-info { display: flex; align-items: center; gap: 10px; }
+.platform-logo { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.pl-yt { background: #ff0000; }
+.pl-tt { background: #010101; }
+.pl-fb { background: #1877f2; }
+.pl-ig { background: linear-gradient(135deg, #f09433, #dc2743, #bc1888); }
+.platform-name { font-size: 13px; font-weight: 500; }
+.platform-type { font-size: 11px; color: var(--text2); }
+.toggle-switch { width: 36px; height: 20px; border-radius: 10px; background: var(--bg4); border: 1px solid var(--border2); position: relative; transition: all 0.15s; }
+.toggle-switch.on { background: var(--accent); border-color: var(--accent); }
+.toggle-switch::after { content: ''; position: absolute; width: 14px; height: 14px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: all 0.15s; }
+.toggle-switch.on::after { left: 18px; }
+
+/* AI Result */
+.ai-result { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 12px; }
+.ai-result-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.ai-result-platform { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+.ai-field { margin-bottom: 8px; }
+.ai-field-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); margin-bottom: 4px; }
+.ai-field-value { font-size: 13px; color: var(--text); line-height: 1.5; }
+.ai-field-value.editable { background: var(--bg4); border-radius: 6px; padding: 8px 10px; cursor: text; border: 1px solid transparent; }
+.ai-field-value.editable:hover { border-color: var(--border2); }
+.ai-field-value.editable:focus { outline: none; border-color: var(--accent); }
+.hashtag { display: inline-block; background: var(--accent-bg); color: var(--accent); padding: 2px 8px; border-radius: 4px; font-size: 11px; margin: 2px; cursor: pointer; }
+
+/* Schedule */
+.schedule-type { display: flex; gap: 8px; margin-bottom: 16px; }
+.type-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); font-size: 13px; font-weight: 500; cursor: pointer; text-align: center; transition: all 0.15s; }
+.type-btn.active { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+
+.time-slot { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--bg3); border-radius: 7px; margin-bottom: 6px; cursor: pointer; }
+.time-slot:hover { background: var(--bg4); }
+.time-slot.recommended { border-left: 3px solid var(--green); }
+.slot-time { font-size: 14px; font-weight: 600; color: var(--text); width: 60px; flex-shrink: 0; }
+.slot-info { flex: 1; }
+.slot-label { font-size: 12px; color: var(--text2); }
+.slot-engagement { font-size: 11px; color: var(--green); }
+.slot-select { font-size: 11px; background: var(--bg4); border: 1px solid var(--border2); color: var(--text2); padding: 3px 8px; border-radius: 5px; cursor: pointer; }
+
+/* Calendar */
+.calendar { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.cal-header { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--bg3); }
+.cal-day-header { padding: 10px; text-align: center; font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; border-right: 1px solid var(--border); }
+.cal-day-header:last-child { border-right: none; }
+.cal-body { display: grid; grid-template-columns: repeat(7, 1fr); }
+.cal-cell { min-height: 80px; padding: 8px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+.cal-cell:hover { background: var(--bg3); }
+.cal-cell.today { background: var(--accent-bg); }
+.cal-cell:nth-child(7n) { border-right: none; }
+.cal-date { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+.cal-date.today { color: var(--accent); font-weight: 700; }
+.cal-event { font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev-long { background: var(--blue-bg); color: var(--blue); }
+.ev-short { background: var(--green-bg); color: var(--green); }
+.ev-conflict { background: var(--red-bg); color: var(--red); }
+
+/* Schedule list */
+.schedule-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; }
+.sch-time { text-align: center; min-width: 48px; }
+.sch-time-main { font-size: 16px; font-weight: 700; color: var(--text); line-height: 1; }
+.sch-time-date { font-size: 10px; color: var(--text2); }
+.sch-divider { width: 1px; background: var(--border); height: 36px; }
+.sch-thumb { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.sch-info { flex: 1; min-width: 0; }
+.sch-title { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sch-meta { font-size: 11px; color: var(--text2); margin-top: 3px; }
+.sch-platforms { display: flex; gap: 4px; }
+.sch-actions { display: flex; gap: 6px; }
+
+/* Library */
+.lib-filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.filter-btn { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); transition: all 0.15s; }
+.filter-btn.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+.search-bar { display: flex; align-items: center; gap: 10px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; margin-bottom: 16px; }
+.search-bar input { background: transparent; border: none; flex: 1; font-size: 13px; color: var(--text); padding: 0; }
+.search-bar input:focus { outline: none; }
+
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.lib-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: all 0.15s; }
+.lib-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.lib-thumb { height: 150px; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 36px; position: relative; }
+.lib-type-badge { position: absolute; top: 8px; left: 8px; }
+.lib-views { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 4px; }
+.lib-info { padding: 12px 14px; }
+.lib-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+.lib-meta { display: flex; align-items: center; justify-content: space-between; }
+.lib-platforms { display: flex; gap: 4px; }
+.lib-date { font-size: 11px; color: var(--text2); }
+.lib-stats { display: flex; gap: 12px; margin-top: 8px; }
+.lib-stat { font-size: 11px; color: var(--text2); }
+.lib-stat span { color: var(--text); font-weight: 600; }
+
+/* Analytics */
+.chart-bar { display: flex; align-items: flex-end; gap: 4px; height: 120px; }
+.bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bar { width: 100%; border-radius: 4px 4px 0 0; transition: height 0.3s ease; min-height: 4px; }
+.bar-label { font-size: 10px; color: var(--text2); }
+.bar-val { font-size: 10px; color: var(--text2); }
+
+.platform-row { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.platform-row:last-child { border-bottom: none; }
+.plat-name { width: 100px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.plat-bar-wrap { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; }
+.plat-bar { height: 100%; border-radius: 3px; }
+.plat-val { width: 60px; text-align: right; font-size: 13px; font-weight: 600; color: var(--text); }
+
+/* Settings */
+.api-group { margin-bottom: 20px; }
+.api-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 10px; }
+.api-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.api-name { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; }
+.api-status { font-size: 11px; padding: 3px 8px; border-radius: 20px; }
+.api-connected { background: var(--green-bg); color: var(--green); }
+.api-disconnected { background: var(--red-bg); color: var(--red); }
+.api-input-wrap { display: flex; gap: 8px; }
+.api-input-wrap input { flex: 1; font-family: monospace; font-size: 12px; }
+
+/* Notification */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 14px 18px; display: flex; align-items: center; gap: 12px; font-size: 13px; z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s; max-width: 320px; box-shadow: var(--shadow); }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast-icon { font-size: 18px; }
+.toast-text { flex: 1; }
+.toast-title { font-weight: 600; color: var(--text); }
+.toast-msg { color: var(--text2); font-size: 12px; margin-top: 2px; }
+
+/* Stepper */
+.stepper { display: flex; align-items: center; gap: 0; margin-bottom: 28px; }
+.step { display: flex; align-items: center; gap: 8px; }
+.step-circle { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text2); flex-shrink: 0; }
+.step.active .step-circle { background: var(--accent); border-color: var(--accent); color: #fff; }
+.step.done .step-circle { background: var(--green); border-color: var(--green); color: #fff; }
+.step-label { font-size: 12px; font-weight: 500; color: var(--text2); }
+.step.active .step-label { color: var(--text); }
+.step.done .step-label { color: var(--green); }
+.step-line { flex: 1; height: 2px; background: var(--border); margin: 0 8px; }
+.step-line.done { background: var(--green); }
+
+/* Progress */
+.progress-bar { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+.progress-fill { height: 100%; border-radius: 2px; background: var(--accent); transition: width 0.4s ease; }
+
+/* Divider */
+.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+/* Section title */
+.section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-bottom: 12px; font-weight: 600; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .grid-4 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
+}
+
+/* Spinner */
+.spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Tag input */
+.tag-wrap { display: flex; flex-wrap: wrap; gap: 6px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 8px 10px; min-height: 42px; cursor: text; }
+.tag-wrap:focus-within { border-color: var(--accent); }
+.tag-item { background: var(--accent-bg); color: var(--accent); border-radius: 4px; font-size: 12px; padding: 2px 8px; display: flex; align-items: center; gap: 4px; }
+.tag-remove { cursor: pointer; opacity: 0.6; }
+.tag-remove:hover { opacity: 1; }
+.tag-input { border: none; background: transparent; color: var(--text); font-size: 13px; outline: none; flex: 1; min-width: 80px; }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+.empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+.empty-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.empty-desc { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+
+/* Bulk upload */
+.bulk-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg3); border-radius: 8px; margin-bottom: 8px; }
+.bulk-thumb { width: 40px; height: 40px; border-radius: 6px; background: var(--bg4); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.bulk-name { flex: 1; font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bulk-sch { font-size: 12px; color: var(--accent); margin-top: 2px; }
+.bulk-status { font-size: 11px; }
+
+/* Conflict warning */
+.conflict-banner { background: var(--amber-bg); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; font-size: 13px; color: var(--amber); }
+
+/* Publishing status */
+.pub-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--bg3); border-radius: 8px; margin-bottom: 8px; }
+.pub-logo { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.pub-info { flex: 1; }
+.pub-name { font-size: 13px; font-weight: 500; }
+.pub-link { font-size: 11px; color: var(--accent); cursor: pointer; }
+.pub-status { font-size: 12px; font-weight: 500; }
+.pub-status.done { color: var(--green); }
+.pub-status.pending { color: var(--amber); }
+.pub-status.error { color: var(--red); }
+
+/* Golden hours */
+.golden-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.golden-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.golden-platform { font-size: 12px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.golden-slots { display: flex; flex-direction: column; gap: 4px; }
+.golden-slot { font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+.golden-slot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.gs-high::before { background: var(--green); }
+.gs-med::before { background: var(--amber); }
+
+/* Frequency settings */
+.freq-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.freq-item:last-child { border-bottom: none; }
+.freq-label { font-size: 13px; color: var(--text); }
+.freq-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.freq-input { width: 80px; }
+</style>
+</head>
+<body>
+<h2 class="sr-only" style="position:absolute;left:-9999px">PublishFlow Pro — Quản lý và đăng nội dung lên đa nền tảng</h2>
+
+<div class="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">
+        <div class="logo-icon">🚀</div>
+        <div>
+          <div class="logo-text">PublishFlow</div>
+          <div class="logo-sub">Pro</div>
+        </div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-section">Sản xuất</div>
+      <div class="nav-item active" onclick="showPage('create')"><span class="nav-icon">✏️</span> Tạo mới</div>
+      <div class="nav-item" onclick="showPage('schedule')"><span class="nav-icon">📅</span> Lên lịch <span class="nav-badge" id="sched-count">3</span></div>
+      <div class="nav-section">Quản lý</div>
+      <div class="nav-item" onclick="showPage('library')"><span class="nav-icon">🗂️</span> Thư viện</div>
+      <div class="nav-item" onclick="showPage('analytics')"><span class="nav-icon">📊</span> Analytics</div>
+      <div class="nav-section">Hệ thống</div>
+      <div class="nav-item" onclick="showPage('settings')"><span class="nav-icon">⚙️</span> Cài đặt API</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">TVT</div>
+        <div class="user-info">
+          <div class="user-name">TVT Tư Duy</div>
+          <div class="user-role">Content Creator</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- ===== CREATE PAGE ===== -->
+    <div class="page active" id="page-create">
+      <div class="page-header">
+        <div class="page-title">Tạo bài đăng mới</div>
+        <div class="page-sub">Từ video đến đa nền tảng — 4 bước đơn giản</div>
+      </div>
+
+      <!-- Stepper -->
+      <div class="stepper">
+        <div class="step active" id="step-1">
+          <div class="step-circle">1</div>
+          <div class="step-label">Nội dung</div>
+        </div>
+        <div class="step-line" id="line-1"></div>
+        <div class="step" id="step-2">
+          <div class="step-circle">2</div>
+          <div class="step-label">AI tối ưu</div>
+        </div>
+        <div class="step-line" id="line-2"></div>
+        <div class="step" id="step-3">
+          <div class="step-circle">3</div>
+          <div class="step-label">Xem trước</div>
+        </div>
+        <div class="step-line" id="line-3"></div>
+        <div class="step" id="step-4">
+          <div class="step-circle">4</div>
+          <div class="step-label">Đăng</div>
+        </div>
+      </div>
+
+      <!-- Step 1: Content -->
+      <div id="pane-1">
+        <div class="grid-2" style="gap:24px">
+          <!-- Left -->
+          <div>
+            <div class="form-group">
+              <label>Video</label>
+              <label for="video-input" class="upload-zone" id="video-zone"
+                ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+                ondragleave="this.style.borderColor=''"
+                ondrop="event.preventDefault();handleVideoFile({files:event.dataTransfer.files})"
+                style="display:block;cursor:pointer">
+                <input type="file" id="video-input" accept="video/*" style="display:none" onchange="handleVideoFile(this)">
+                <div class="upload-icon" id="video-icon">🎬</div>
+                <div id="video-text" style="font-size:13px;color:var(--text)">Kéo thả hoặc click để chọn video</div>
+                <div class="upload-hint">MP4, MOV, AVI — tối đa 4GB</div>
+              </label>
+            </div>
+            <div class="form-group">
+              <label>Thumbnail</label>
+              <label for="thumb-input" class="upload-zone" id="thumb-zone"
+                ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+                ondragleave="this.style.borderColor=''"
+                ondrop="event.preventDefault();handleThumbFile({files:event.dataTransfer.files})"
+                style="display:block;cursor:pointer">
+                <input type="file" id="thumb-input" accept="image/*" style="display:none" onchange="handleThumbFile(this)">
+                <div class="upload-icon" id="thumb-icon">🖼️</div>
+                <div id="thumb-text" style="font-size:13px;color:var(--text)">Kéo thả hoặc click để chọn ảnh</div>
+                <div class="upload-hint">JPG, PNG — 1280×720px hoặc 1080×1920px</div>
+              </label>
+            </div>
+          </div>
+          <!-- Right -->
+          <div>
+            <div class="form-group">
+              <label>Loại video</label>
+              <div class="schedule-type">
+                <div class="type-btn active" id="type-long" onclick="setVideoType('long')">📹 Video dài</div>
+                <div class="type-btn" id="type-short" onclick="setVideoType('short')">⚡ Short / Reels</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Tiêu đề gốc</label>
+              <input type="text" id="input-title" placeholder="Tiêu đề của video..." value="">
+            </div>
+            <div class="form-group">
+              <label>Mô tả</label>
+              <textarea id="input-desc" placeholder="Mô tả nội dung video..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Tags (nhấn Enter để thêm)</label>
+              <div class="tag-wrap" id="tag-wrap" onclick="document.getElementById('tag-input').focus()">
+                <input type="text" class="tag-input" id="tag-input" placeholder="Nhập tag..." onkeydown="handleTag(event)">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Đăng lên nền tảng</label>
+              <div class="platform-toggle selected" id="pl-yt" onclick="togglePlatform('yt')">
+                <div class="platform-info"><div class="platform-logo pl-yt">▶</div><div><div class="platform-name">YouTube</div><div class="platform-type">Long-form & Shorts</div></div></div>
+                <div class="toggle-switch on" id="sw-yt"></div>
+              </div>
+              <div class="platform-toggle selected" id="pl-tt" onclick="togglePlatform('tt')">
+                <div class="platform-info"><div class="platform-logo pl-tt" style="color:#69c9d0;font-weight:900">T</div><div><div class="platform-name">TikTok</div><div class="platform-type">Short videos</div></div></div>
+                <div class="toggle-switch on" id="sw-tt"></div>
+              </div>
+              <div class="platform-toggle" id="pl-fb" onclick="togglePlatform('fb')">
+                <div class="platform-info"><div class="platform-logo pl-fb" style="color:#fff;font-weight:700;font-size:16px">f</div><div><div class="platform-name">Facebook</div><div class="platform-type">Reels & Video</div></div></div>
+                <div class="toggle-switch" id="sw-fb"></div>
+              </div>
+              <div class="platform-toggle" id="pl-ig" onclick="togglePlatform('ig')">
+                <div class="platform-info"><div class="platform-logo pl-ig" style="color:#fff;font-size:16px">📸</div><div><div class="platform-name">Instagram</div><div class="platform-type">Reels & Feed</div></div></div>
+                <div class="toggle-switch" id="sw-ig"></div>
+              </div>
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="goStep(2)">Tiếp theo → AI tối ưu</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: AI -->
+      <div id="pane-2" style="display:none">
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title">🤖 AI tối ưu nội dung cho từng nền tảng</div>
+          <div id="ai-loading" style="text-align:center;padding:30px;display:none">
+            <div class="spinner" style="margin:0 auto 12px"></div>
+            <div style="color:var(--text2);font-size:13px">Đang phân tích và tối ưu nội dung...</div>
+            <div class="progress-bar" style="max-width:300px;margin:12px auto 0"><div class="progress-fill" id="ai-progress" style="width:0%"></div></div>
+          </div>
+          <div id="ai-results"></div>
+          <div id="ai-start" style="text-align:center;padding:20px">
+            <div style="font-size:32px;margin-bottom:10px">✨</div>
+            <div style="font-size:14px;color:var(--text2);margin-bottom:16px">AI sẽ tạo tiêu đề, mô tả và hashtag tối ưu<br>riêng cho từng nền tảng</div>
+            <button class="btn btn-primary" onclick="runAI()">Chạy AI tối ưu</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:space-between">
+          <button class="btn btn-secondary" onclick="goStep(1)">← Quay lại</button>
+          <button class="btn btn-primary" onclick="goStep(3)">Xem trước →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Preview -->
+      <div id="pane-3" style="display:none">
+        <div class="tabs">
+          <div class="tab active" onclick="switchPreview(this,'yt')">▶ YouTube</div>
+          <div class="tab" onclick="switchPreview(this,'tt')">TikTok</div>
+          <div class="tab" onclick="switchPreview(this,'fb')">Facebook</div>
+          <div class="tab" onclick="switchPreview(this,'ig')">Instagram</div>
+        </div>
+        <div id="preview-area"></div>
+        <div style="display:flex;gap:10px;justify-content:space-between;margin-top:20px">
+          <button class="btn btn-secondary" onclick="goStep(2)">← Quay lại</button>
+          <button class="btn btn-primary" onclick="goStep(4)">Đăng ngay →</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Publish -->
+      <div id="pane-4" style="display:none">
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title">🚀 Đăng lên các nền tảng</div>
+          <div id="pub-status"></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:space-between">
+          <button class="btn btn-secondary" onclick="goStep(3)">← Quay lại</button>
+          <button class="btn btn-primary" onclick="publish()">🚀 Đăng tất cả</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCHEDULE PAGE ===== -->
+    <div class="page" id="page-schedule">
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div>
+          <div class="page-title">Lịch đăng</div>
+          <div class="page-sub">Quản lý lịch đăng — Long-form & Short theo chiến lược tối ưu</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-secondary btn-sm" onclick="openBulk()">⚡ Bulk Shorts</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddSchedule()">+ Thêm lịch</button>
+        </div>
+      </div>
+
+      <!-- Conflict warning -->
+      <div class="conflict-banner" id="conflict-banner">
+        ⚠️ Phát hiện 2 video đăng trong vòng 3 giờ ngày 30/06 — có thể chia sẻ lượt tiếp cận. Cân nhắc giãn lịch.
+      </div>
+
+      <!-- Calendar -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title" style="justify-content:space-between">
+          <span>📅 Lịch tháng 6/2026</span>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span style="font-size:11px;color:var(--text2)">
+              <span style="color:var(--blue)">■</span> Long-form
+              <span style="color:var(--green);margin-left:8px">■</span> Short
+              <span style="color:var(--red);margin-left:8px">■</span> Xung đột
+            </span>
+          </div>
+        </div>
+        <div class="calendar">
+          <div class="cal-header">
+            <div class="cal-day-header">T2</div>
+            <div class="cal-day-header">T3</div>
+            <div class="cal-day-header">T4</div>
+            <div class="cal-day-header">T5</div>
+            <div class="cal-day-header">T6</div>
+            <div class="cal-day-header">T7</div>
+            <div class="cal-day-header">CN</div>
+          </div>
+          <div class="cal-body" id="cal-body"></div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="gap:20px;margin-bottom:20px">
+        <!-- Upcoming -->
+        <div>
+          <div class="section-title">Sắp tới</div>
+          <div id="schedule-list"></div>
+        </div>
+        <!-- Golden hours -->
+        <div>
+          <div class="section-title">Giờ vàng đăng bài</div>
+          <div class="golden-grid">
+            <div class="golden-item">
+              <div class="golden-platform"><span style="background:#ff0000;width:14px;height:14px;border-radius:3px;display:inline-block"></span>YouTube</div>
+              <div class="golden-slots">
+                <div class="golden-slot gs-high">15:00–17:00 (cao nhất)</div>
+                <div class="golden-slot gs-high">19:00–21:00</div>
+                <div class="golden-slot gs-med">12:00–13:00</div>
+              </div>
+            </div>
+            <div class="golden-item">
+              <div class="golden-platform"><span style="background:#010101;border:1px solid #69c9d0;width:14px;height:14px;border-radius:3px;display:inline-block"></span>TikTok</div>
+              <div class="golden-slots">
+                <div class="golden-slot gs-high">19:00–21:00 (cao nhất)</div>
+                <div class="golden-slot gs-high">06:00–09:00</div>
+                <div class="golden-slot gs-med">15:00–17:00</div>
+              </div>
+            </div>
+            <div class="golden-item">
+              <div class="golden-platform"><span style="background:#1877f2;width:14px;height:14px;border-radius:3px;display:inline-block"></span>Facebook</div>
+              <div class="golden-slots">
+                <div class="golden-slot gs-high">20:00–22:00 (cao nhất)</div>
+                <div class="golden-slot gs-med">12:00–14:00</div>
+                <div class="golden-slot gs-med">07:00–09:00</div>
+              </div>
+            </div>
+            <div class="golden-item">
+              <div class="golden-platform"><span style="background:#e1306c;width:14px;height:14px;border-radius:3px;display:inline-block"></span>Instagram</div>
+              <div class="golden-slots">
+                <div class="golden-slot gs-high">11:00–13:00 (cao nhất)</div>
+                <div class="golden-slot gs-high">17:00–19:00</div>
+                <div class="golden-slot gs-med">21:00–22:00</div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:14px">
+            <div class="card-title" style="margin-bottom:12px">⚙️ Tần suất đề xuất</div>
+            <div class="freq-item"><div><div class="freq-label">Video dài</div><div class="freq-sub">YouTube / Facebook</div></div><select class="freq-input btn-secondary" style="padding:5px 8px;font-size:12px"><option>1×/tuần</option><option selected>2×/tuần</option><option>3×/tuần</option></select></div>
+            <div class="freq-item"><div><div class="freq-label">Shorts / Reels</div><div class="freq-sub">TikTok / Instagram</div></div><select class="freq-input btn-secondary" style="padding:5px 8px;font-size:12px"><option>1×/ngày</option><option selected>2×/ngày</option><option>3×/ngày</option></select></div>
+            <div class="freq-item" style="border:none"><div><div class="freq-label">Khoảng cách tối thiểu</div><div class="freq-sub">Long-form cùng kênh</div></div><select class="freq-input btn-secondary" style="padding:5px 8px;font-size:12px"><option>2 ngày</option><option selected>3 ngày</option><option>4 ngày</option></select></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bulk upload modal (hidden by default) -->
+      <div id="bulk-panel" style="display:none">
+        <div class="card">
+          <div class="card-title" style="justify-content:space-between">⚡ Bulk Shorts Scheduler <button class="btn btn-ghost btn-sm" onclick="closeBulk()">✕</button></div>
+          <div style="margin-bottom:16px">
+            <div class="upload-zone" onclick="fakeBulkUpload()">
+              <div class="upload-icon">📦</div>
+              <div style="font-size:13px;color:var(--text)">Upload nhiều short cùng lúc</div>
+              <div class="upload-hint">Kéo thả hoặc click — MP4, tối đa 50 file</div>
+            </div>
+          </div>
+          <div id="bulk-list"></div>
+          <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+            <label style="font-size:12px;text-transform:none;color:var(--text2)">Đăng từ:</label>
+            <input type="datetime-local" style="width:200px" value="2026-06-30T19:00">
+            <label style="font-size:12px;text-transform:none;color:var(--text2)">Cách nhau:</label>
+            <select style="width:120px"><option>4 giờ</option><option selected>6 giờ</option><option>12 giờ</option><option>1 ngày</option></select>
+            <button class="btn btn-primary btn-sm" onclick="autoSchedule()">Tự động rải lịch</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== LIBRARY PAGE ===== -->
+    <div class="page" id="page-library">
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div>
+          <div class="page-title">Thư viện nội dung</div>
+          <div class="page-sub">Tất cả bài đăng — tìm kiếm, lọc và tái sử dụng</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <span style="font-size:12px;color:var(--text2);align-self:center">Tổng: <strong style="color:var(--text)">48 video</strong></span>
+          <span style="font-size:12px;color:var(--text2);align-self:center">|</span>
+          <span style="font-size:12px;color:var(--text2);align-self:center">Views: <strong style="color:var(--accent)">1.2M</strong></span>
+        </div>
+      </div>
+      <div class="search-bar">
+        <span style="color:var(--text2)">🔍</span>
+        <input type="text" placeholder="Tìm theo tiêu đề, tag..." oninput="filterLib(this.value)">
+      </div>
+      <div class="lib-filters" id="lib-filters">
+        <div class="filter-btn active" onclick="setFilter(this,'all')">Tất cả</div>
+        <div class="filter-btn" onclick="setFilter(this,'long')">📹 Long-form</div>
+        <div class="filter-btn" onclick="setFilter(this,'short')">⚡ Shorts</div>
+        <div class="filter-btn" onclick="setFilter(this,'yt')">▶ YouTube</div>
+        <div class="filter-btn" onclick="setFilter(this,'tt')">TikTok</div>
+        <div class="filter-btn" onclick="setFilter(this,'fb')">Facebook</div>
+        <div class="filter-btn" onclick="setFilter(this,'ig')">Instagram</div>
+      </div>
+      <div class="lib-grid" id="lib-grid"></div>
+    </div>
+
+    <!-- ===== ANALYTICS PAGE ===== -->
+    <div class="page" id="page-analytics">
+      <div class="page-header">
+        <div class="page-title">Analytics</div>
+        <div class="page-sub">Hiệu quả tổng hợp — 30 ngày gần nhất</div>
+      </div>
+      <div class="grid-4" style="margin-bottom:24px">
+        <div class="stat-card"><div class="stat-label">Tổng lượt xem</div><div class="stat-value">1.2M</div><div class="stat-change stat-up">↑ 24% so tháng trước</div></div>
+        <div class="stat-card"><div class="stat-label">Lượt thích</div><div class="stat-value">48K</div><div class="stat-change stat-up">↑ 18%</div></div>
+        <div class="stat-card"><div class="stat-label">Bình luận</div><div class="stat-value">3.2K</div><div class="stat-change stat-up">↑ 31%</div></div>
+        <div class="stat-card"><div class="stat-label">Tỉ lệ tương tác</div><div class="stat-value">4.2%</div><div class="stat-change stat-down">↓ 0.3%</div></div>
+      </div>
+
+      <div class="grid-2" style="gap:20px;margin-bottom:20px">
+        <div class="card">
+          <div class="card-title">📈 Views 7 ngày gần nhất</div>
+          <div class="chart-bar" id="chart-7d"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🏆 Hiệu quả theo nền tảng</div>
+          <div id="platform-perf"></div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="gap:20px">
+        <div class="card">
+          <div class="card-title">🎬 Top video (30 ngày)</div>
+          <div id="top-videos"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">⚡ Long vs Short</div>
+          <div style="display:flex;gap:20px;margin-top:8px">
+            <div style="flex:1;text-align:center">
+              <div style="font-size:36px;font-weight:700;color:var(--blue)">18</div>
+              <div style="font-size:12px;color:var(--text2)">Long-form</div>
+              <div style="font-size:13px;color:var(--text);margin-top:4px">avg 52K views</div>
+            </div>
+            <div style="width:1px;background:var(--border)"></div>
+            <div style="flex:1;text-align:center">
+              <div style="font-size:36px;font-weight:700;color:var(--green)">30</div>
+              <div style="font-size:12px;color:var(--text2)">Short/Reels</div>
+              <div style="font-size:13px;color:var(--text);margin-top:4px">avg 28K views</div>
+            </div>
+          </div>
+          <hr class="divider">
+          <div style="font-size:12px;color:var(--text2)">💡 Chiến lược tốt nhất của bạn: đăng Long-form T4 19:00 → cắt 3 Short từ đó → rải TikTok/Reels T5–T7</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SETTINGS PAGE ===== -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title">Cài đặt API</div>
+        <div class="page-sub">Kết nối tài khoản để đăng tự động</div>
+      </div>
+
+      <div class="grid-2" style="gap:20px">
+        <div>
+          <div class="section-title">Nền tảng</div>
+
+          <div class="api-item">
+            <div class="api-header">
+              <div class="api-name"><span style="background:#ff0000;width:20px;height:20px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:10px">▶</span> YouTube</div>
+              <span class="api-status api-disconnected">Chưa kết nối</span>
+            </div>
+            <div class="api-input-wrap">
+              <input type="password" placeholder="YouTube Data API Key...">
+              <button class="btn btn-secondary btn-sm">Kết nối</button>
+            </div>
+            <div style="margin-top:8px;font-size:11px;color:var(--text2)">→ <a href="#" style="color:var(--accent)">Lấy API key tại Google Console</a></div>
+          </div>
+
+          <div class="api-item">
+            <div class="api-header">
+              <div class="api-name"><span style="background:#010101;border:1px solid #69c9d0;width:20px;height:20px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#69c9d0;font-weight:900">T</span> TikTok</div>
+              <span class="api-status api-disconnected">Chưa kết nối</span>
+            </div>
+            <div class="api-input-wrap">
+              <input type="password" placeholder="TikTok for Developers Client Key...">
+              <button class="btn btn-secondary btn-sm">Kết nối</button>
+            </div>
+            <div style="margin-top:8px;font-size:11px;color:var(--text2)">→ <a href="#" style="color:var(--accent)">TikTok Developer Portal</a></div>
+          </div>
+
+          <div class="api-item">
+            <div class="api-header">
+              <div class="api-name"><span style="background:#1877f2;width:20px;height:20px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700">f</span> Facebook</div>
+              <span class="api-status api-connected">Đã kết nối</span>
+            </div>
+            <div style="font-size:12px;color:var(--text2)">Trang: <strong style="color:var(--text)">TVT Tư Duy</strong> · Token hết hạn: 29/09/2026</div>
+            <button class="btn btn-danger btn-sm" style="margin-top:8px">Ngắt kết nối</button>
+          </div>
+
+          <div class="api-item">
+            <div class="api-header">
+              <div class="api-name"><span style="background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);width:20px;height:20px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:12px">📷</span> Instagram</div>
+              <span class="api-status api-disconnected">Chưa kết nối</span>
+            </div>
+            <div class="api-input-wrap">
+              <input type="password" placeholder="Instagram Graph API Token...">
+              <button class="btn btn-secondary btn-sm">Kết nối</button>
+            </div>
+            <div style="margin-top:8px;font-size:11px;color:var(--text2)">→ <a href="#" style="color:var(--accent)">Meta for Developers</a></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">AI & Tự động hoá</div>
+          <div class="card" style="margin-bottom:14px">
+            <div class="card-title">🤖 Claude AI</div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label>Anthropic API Key</label>
+              <div class="api-input-wrap">
+                <input type="password" placeholder="sk-ant-..." value="sk-ant-••••••••••••••••">
+                <button class="btn btn-success btn-sm">✓ Đã kết nối</button>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label>Model</label>
+              <select><option selected>claude-sonnet-4-6 (khuyến nghị)</option><option>claude-opus-4-8 (chính xác hơn)</option><option>claude-haiku-4-5 (nhanh hơn)</option></select>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>Ngôn ngữ tối ưu mặc định</label>
+              <select><option selected>Tiếng Việt</option><option>English</option><option>Cả hai</option></select>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:14px">
+            <div class="card-title">📤 Cài đặt đăng bài</div>
+            <div class="freq-item"><div><div class="freq-label">Tự động thêm watermark</div><div class="freq-sub">Logo TVT Tư Duy</div></div><div class="toggle-switch on" style="cursor:pointer" onclick="this.classList.toggle('on')"></div></div>
+            <div class="freq-item"><div><div class="freq-label">Tự động thêm CTA cuối video</div><div class="freq-sub">Subscribe / Follow</div></div><div class="toggle-switch on" style="cursor:pointer" onclick="this.classList.toggle('on')"></div></div>
+            <div class="freq-item" style="border:none"><div><div class="freq-label">Phát hiện xung đột lịch</div><div class="freq-sub">Cảnh báo khi đăng dày</div></div><div class="toggle-switch on" style="cursor:pointer" onclick="this.classList.toggle('on')"></div></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">📋 Chữ ký mặc định</div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label>Hashtag thương hiệu</label>
+              <input type="text" value="#TVTTuDuy #TuDuyTaiChinh #PhatTrienBanThan">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>CTA cố định</label>
+              <textarea style="min-height:60px">👇 Subscribe để không bỏ lỡ video mới!
+📱 Follow TikTok: @tvttuduay</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <div class="toast-icon" id="toast-icon">✅</div>
+  <div class="toast-text"><div class="toast-title" id="toast-title"></div><div class="toast-msg" id="toast-msg"></div></div>
+</div>
+
+<script>
+// ====== State ======
+let tags = [];
+let platforms = { yt: true, tt: true, fb: false, ig: false };
+let videoType = 'long';
+let aiData = {};
+let currentStep = 1;
+let libFilter = 'all';
+let libSearch = '';
+let bulkFiles = [];
+
+// ====== Navigation ======
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'analytics') renderAnalytics();
+  if (id === 'library') renderLibrary();
+  if (id === 'schedule') renderSchedule();
+}
+
+// ====== Tags ======
+function handleTag(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(/^#/, '');
+    if (val && !tags.includes(val)) {
+      tags.push(val);
+      renderTags();
+    }
+    e.target.value = '';
+  }
+}
+function renderTags() {
+  const wrap = document.getElementById('tag-wrap');
+  wrap.innerHTML = '';
+  tags.forEach(t => {
+    const el = document.createElement('span');
+    el.className = 'tag-item';
+    el.innerHTML = `#${t} <span class="tag-remove" onclick="removeTag('${t}')">×</span>`;
+    wrap.appendChild(el);
+  });
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.className = 'tag-input'; inp.id = 'tag-input';
+  inp.placeholder = 'Nhập tag...';
+  inp.onkeydown = handleTag;
+  wrap.appendChild(inp);
+}
+function removeTag(t) { tags = tags.filter(x => x !== t); renderTags(); }
+
+// ====== Upload ======
+let videoFile = null, thumbFile = null, thumbURL = null;
+
+function handleVideoFile(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  videoFile = file;
+  const zone = document.getElementById('video-zone');
+  const icon = document.getElementById('video-icon');
+  const text = document.getElementById('video-text');
+  zone.classList.add('has-file');
+  icon.textContent = '✅';
+  const mb = (file.size / 1024 / 1024).toFixed(1);
+  text.textContent = file.name + ' (' + mb + ' MB)';
+  zone.querySelector('.upload-hint').textContent = 'Click để đổi file';
+}
+
+function handleThumbFile(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  thumbFile = file;
+  if (thumbURL) URL.revokeObjectURL(thumbURL);
+  thumbURL = URL.createObjectURL(file);
+  const zone = document.getElementById('thumb-zone');
+  const icon = document.getElementById('thumb-icon');
+  const text = document.getElementById('thumb-text');
+  zone.classList.add('has-file');
+  const kb = (file.size / 1024).toFixed(0);
+  // Show actual thumbnail preview
+  icon.innerHTML = '<img src="' + thumbURL + '" style="width:80px;height:60px;object-fit:cover;border-radius:6px">';
+  text.textContent = file.name + ' (' + kb + ' KB)';
+  zone.querySelector('.upload-hint').textContent = 'Click để đổi ảnh';
+}
+
+// ====== Platform toggle ======
+function togglePlatform(pl) {
+  platforms[pl] = !platforms[pl];
+  const el = document.getElementById('pl-' + pl);
+  const sw = document.getElementById('sw-' + pl);
+  el.classList.toggle('selected', platforms[pl]);
+  sw.classList.toggle('on', platforms[pl]);
+}
+
+// ====== Video type ======
+function setVideoType(t) {
+  videoType = t;
+  document.getElementById('type-long').classList.toggle('active', t === 'long');
+  document.getElementById('type-short').classList.toggle('active', t === 'short');
+}
+
+// ====== Steps ======
+function goStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById('pane-' + i).style.display = i === n ? 'block' : 'none';
+    const step = document.getElementById('step-' + i);
+    step.classList.remove('active', 'done');
+    if (i < n) step.classList.add('done');
+    if (i === n) step.classList.add('active');
+    if (i < 4) {
+      document.getElementById('line-' + i).classList.toggle('done', i < n);
+    }
+  }
+  currentStep = n;
+  if (n === 3) renderPreview('yt');
+  if (n === 4) renderPublishStatus();
+}
+
+// ====== AI ======
+function runAI() {
+  document.getElementById('ai-start').style.display = 'none';
+  document.getElementById('ai-loading').style.display = 'block';
+  let p = 0;
+  const prog = document.getElementById('ai-progress');
+  const iv = setInterval(() => {
+    p += Math.random() * 15;
+    if (p >= 100) { p = 100; clearInterval(iv); showAIResults(); }
+    prog.style.width = Math.min(p, 100) + '%';
+  }, 200);
+}
+function showAIResults() {
+  document.getElementById('ai-loading').style.display = 'none';
+  const title = document.getElementById('input-title').value || 'Bẫy tiêu dùng — Tại sao bạn luôn hết tiền?';
+  const activePlatforms = Object.keys(platforms).filter(k => platforms[k]);
+  const content = {
+    yt: {
+      name: 'YouTube', icon: '▶', color: '#ff0000',
+      title: `${title} | Tư Duy Tài Chính #${Math.floor(Math.random()*20)+1}`,
+      desc: `🔥 Trong video này chúng ta sẽ khám phá tại sao các chiếc bẫy tiêu dùng luôn khiến bạn hết tiền cuối tháng...\n\n⏱️ Timestamps:\n00:00 Giới thiệu\n02:30 Bẫy tiêu dùng số 1\n08:15 Luật 24 giờ\n15:40 Giải pháp thực tế\n\n👇 Subscribe để không bỏ lỡ!`,
+      tags: ['tuduytaichinh', 'quanlytien', 'taichinh', 'TVTTuDuy', 'tikhiem', 'dautu']
+    },
+    tt: {
+      name: 'TikTok', icon: 'T', color: '#69c9d0',
+      title: `Tại sao bạn LUÔN hết tiền cuối tháng? 🤔💸`,
+      desc: `Bẫy tiêu dùng nguy hiểm nhất mà ai cũng mắc phải!\nWatch till the end 👇`,
+      tags: ['tikhiem', 'taichinh', 'tuduytaichinh', 'fyp', 'viral', 'moneyadvice', 'TVT']
+    },
+    fb: {
+      name: 'Facebook', icon: 'f', color: '#1877f2',
+      title: `${title}`,
+      desc: `💡 Bạn có biết tại sao dù cố gắng tiết kiệm nhưng tài khoản vẫn về 0 cuối tháng?\n\nTrong video hôm nay mình chia sẻ 5 bẫy tiêu dùng cực kỳ nguy hiểm và cách thoát ra...\n\n👉 Xem video và để lại bình luận bạn đang mắc phải bẫy nào nhé!\n#TVTTuDuy #TaiChinh #TuDuy`,
+      tags: ['TVTTuDuy', 'TaiChinh', 'TuDuy', 'QuanLyTien']
+    },
+    ig: {
+      name: 'Instagram', icon: '📸', color: '#e1306c',
+      title: `Bẫy tiêu dùng 💸`,
+      desc: `Tại sao bạn LUÔN hết tiền? 🤔\nWatch video đầy đủ trên YouTube!\n.\n.\n.\n#tikhiem #taichinh #tuduytaichinh #quanlytien #dautu #money #moneyadvice #viral #fyp #trending #TVTTuDuy #vietnam #lifestyle #success #mindset`,
+      tags: Array.from({length: 25}, (_,i) => ['tikhiem','taichinh','tuduytaichinh','quanlytien','dautu','money','moneyadvice','viral','fyp','trending','TVTTuDuy','vietnam','lifestyle','success','mindset','richlife','financialfreedom','savemoney','budget','investing','growth','motivate','dailylife','contentcreator','reels'][i])
+    }
+  };
+  aiData = content;
+  const results = document.getElementById('ai-results');
+  results.innerHTML = activePlatforms.map(pl => `
+    <div class="ai-result">
+      <div class="ai-result-header">
+        <div class="ai-result-platform">
+          <span style="width:22px;height:22px;border-radius:4px;background:${content[pl]?.color||'#888'};display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700">${content[pl]?.icon}</span>
+          ${content[pl]?.name}
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="regenPlatform('${pl}')">↻ Tạo lại</button>
+      </div>
+      <div class="ai-field">
+        <div class="ai-field-label">Tiêu đề</div>
+        <div class="ai-field-value editable" contenteditable="true" id="ai-title-${pl}">${content[pl]?.title}</div>
+      </div>
+      <div class="ai-field">
+        <div class="ai-field-label">Mô tả</div>
+        <div class="ai-field-value editable" contenteditable="true" id="ai-desc-${pl}" style="white-space:pre-wrap">${content[pl]?.desc}</div>
+      </div>
+      <div class="ai-field">
+        <div class="ai-field-label">Hashtags (click để xoá)</div>
+        <div>${(content[pl]?.tags||[]).map(t => `<span class="hashtag" onclick="removeHashtag(this)">#${t}</span>`).join('')}</div>
+      </div>
+    </div>
+  `).join('');
+}
+function removeHashtag(el) { el.style.opacity = '0.3'; el.style.textDecoration = 'line-through'; }
+function regenPlatform(pl) { toast('🔄', 'Đang tạo lại...', 'AI đang tối ưu cho ' + pl.toUpperCase()); }
+
+// ====== Preview ======
+function switchPreview(el, pl) {
+  document.querySelectorAll('#pane-3 .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderPreview(pl);
+}
+function renderPreview(pl) {
+  const title = aiData[pl]?.title || document.getElementById('input-title').value || 'Video của tôi';
+  const desc = aiData[pl]?.desc || '';
+  const previews = {
+    yt: `<div style="background:var(--bg3);border-radius:10px;overflow:hidden;max-width:560px"><div style="background:#1a1a1a;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:48px">🎬</div><div style="padding:14px"><div style="font-size:15px;font-weight:600;margin-bottom:8px;color:var(--text)">${title}</div><div style="font-size:12px;color:var(--text2)">TVT Tư Duy · 1.2K lượt xem · vừa đăng</div><hr class="divider"><div style="font-size:12px;color:var(--text2);white-space:pre-wrap">${desc.substring(0,200)}...</div></div></div>`,
+    tt: `<div style="background:#000;border-radius:14px;overflow:hidden;max-width:320px;margin:0 auto"><div style="aspect-ratio:9/16;background:linear-gradient(180deg,#111 0%,#222 100%);display:flex;align-items:center;justify-content:center;font-size:48px;position:relative"><span>🎬</span><div style="position:absolute;bottom:60px;left:14px;right:50px"><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:6px">@tvttuduay</div><div style="font-size:12px;color:#fff;opacity:0.9">${title}</div></div><div style="position:absolute;right:14px;bottom:100px;display:flex;flex-direction:column;gap:20px;align-items:center"><div style="text-align:center;color:#fff"><div style="font-size:24px">❤️</div><div style="font-size:11px">24K</div></div><div style="text-align:center;color:#fff"><div style="font-size:24px">💬</div><div style="font-size:11px">892</div></div><div style="text-align:center;color:#fff"><div style="font-size:24px">↗️</div><div style="font-size:11px">Share</div></div></div></div></div>`,
+    fb: `<div style="background:var(--bg3);border-radius:10px;overflow:hidden;max-width:480px"><div style="padding:12px;display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;border-radius:50%;background:#1877f2;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">T</div><div><div style="font-size:13px;font-weight:600;color:var(--text)">TVT Tư Duy</div><div style="font-size:11px;color:var(--text2)">vừa xong · 🌐</div></div></div><div style="font-size:13px;color:var(--text);padding:0 12px 10px;line-height:1.6">${desc.substring(0,150)}...</div><div style="background:#1a1a1a;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:40px">🎬</div><div style="padding:10px 12px;display:flex;gap:20px;border-top:1px solid var(--border)"><span style="font-size:12px;color:var(--text2)">👍 Thích</span><span style="font-size:12px;color:var(--text2)">💬 Bình luận</span><span style="font-size:12px;color:var(--text2)">↗️ Chia sẻ</span></div></div>`,
+    ig: `<div style="background:var(--bg3);border-radius:10px;overflow:hidden;max-width:380px;margin:0 auto"><div style="padding:10px 12px;display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);display:flex;align-items:center;justify-content:center;font-size:14px">📸</div><div style="font-size:13px;font-weight:600;color:var(--text)">tvttuduay</div><span style="margin-left:auto;font-size:11px;color:var(--accent)">Theo dõi</span></div><div style="aspect-ratio:9/16;background:#111;display:flex;align-items:center;justify-content:center;font-size:48px;max-height:400px">🎬</div><div style="padding:10px 12px"><div style="display:flex;gap:14px;margin-bottom:8px"><span style="font-size:20px">❤️</span><span style="font-size:20px">💬</span><span style="font-size:20px">↗️</span><span style="font-size:20px;margin-left:auto">🔖</span></div><div style="font-size:12px;color:var(--text2)"><strong style="color:var(--text)">tvttuduay</strong> ${title}</div></div></div>`
+  };
+  document.getElementById('preview-area').innerHTML = previews[pl] || '<div style="color:var(--text2);text-align:center;padding:40px">Nền tảng này chưa được chọn</div>';
+}
+
+// ====== Publish ======
+function renderPublishStatus() {
+  const active = Object.keys(platforms).filter(k => platforms[k]);
+  const pls = { yt: {name:'YouTube',bg:'#ff0000',icon:'▶'}, tt:{name:'TikTok',bg:'#010101',icon:'T'}, fb:{name:'Facebook',bg:'#1877f2',icon:'f'}, ig:{name:'Instagram',bg:'linear-gradient(135deg,#f09433,#dc2743,#bc1888)',icon:'📸'} };
+  document.getElementById('pub-status').innerHTML = active.map(pl => `
+    <div class="pub-item">
+      <div class="pub-logo" style="background:${pls[pl].bg}">${pls[pl].icon.length===1?`<span style="color:#fff;font-weight:700">${pls[pl].icon}</span>`:pls[pl].icon}</div>
+      <div class="pub-info">
+        <div class="pub-name">${pls[pl].name}</div>
+        <div class="pub-link" id="pub-link-${pl}">Chờ đăng...</div>
+      </div>
+      <div class="pub-status pending" id="pub-status-${pl}">⏳ Chờ</div>
+    </div>
+  `).join('');
+}
+function publish() {
+  const active = Object.keys(platforms).filter(k => platforms[k]);
+  active.forEach((pl, i) => {
+    setTimeout(() => {
+      document.getElementById('pub-status-' + pl).textContent = '⏳ Đang đăng...';
+      document.getElementById('pub-status-' + pl).className = 'pub-status pending';
+      setTimeout(() => {
+        document.getElementById('pub-status-' + pl).textContent = '✅ Đã đăng';
+        document.getElementById('pub-status-' + pl).className = 'pub-status done';
+        document.getElementById('pub-link-' + pl).textContent = 'Xem bài đăng →';
+        if (i === active.length - 1) toast('🚀', 'Đăng thành công!', `Đã đăng lên ${active.length} nền tảng`);
+      }, 1500);
+    }, i * 2000);
+  });
+}
+
+// ====== Schedule ======
+const scheduleData = [
+  { title: 'Bẫy tiêu dùng — VIDEO 3 Đoạn 1', type: 'long', date: '30/06', time: '19:00', platforms: ['yt', 'fb'], emoji: '💸' },
+  { title: 'Short: Luật 24 giờ TikTok', type: 'short', date: '30/06', time: '21:00', platforms: ['tt', 'ig'], emoji: '⚡' },
+  { title: 'Chi tiêu theo giá trị — Full', type: 'long', date: '02/07', time: '15:00', platforms: ['yt'], emoji: '💡' },
+  { title: 'Short: Sự thật về tín dụng', type: 'short', date: '03/07', time: '07:00', platforms: ['tt'], emoji: '💳' },
+];
+function renderSchedule() {
+  // Calendar
+  const body = document.getElementById('cal-body');
+  const days = Array.from({length: 30}, (_,i) => i+1);
+  // pad start (June 1 = Monday)
+  const startDay = 0; // Monday
+  body.innerHTML = '';
+  for (let p = 0; p < startDay; p++) body.innerHTML += '<div class="cal-cell" style="background:var(--bg2);opacity:0.3"></div>';
+  days.forEach(d => {
+    const events = getEventsForDay(d);
+    const isToday = d === 29;
+    const hasConflict = d === 30 && events.length >= 2;
+    body.innerHTML += `<div class="cal-cell${isToday?' today':''}">
+      <div class="cal-date${isToday?' today':''}">${d}</div>
+      ${events.map(e => `<div class="cal-event ${hasConflict?'ev-conflict':e.type==='long'?'ev-long':'ev-short'}">${e.time} ${e.emoji}</div>`).join('')}
+    </div>`;
+  });
+
+  // List
+  document.getElementById('schedule-list').innerHTML = scheduleData.map(s => `
+    <div class="schedule-item">
+      <div class="sch-time"><div class="sch-time-main">${s.time}</div><div class="sch-time-date">${s.date}</div></div>
+      <div class="sch-divider"></div>
+      <div class="sch-thumb">${s.emoji}</div>
+      <div class="sch-info">
+        <div class="sch-title">${s.title}</div>
+        <div class="sch-meta">
+          <span class="badge ${s.type==='long'?'badge-blue':'badge-green'}">${s.type==='long'?'Long-form':'Short'}</span>
+          <span style="margin-left:8px">${s.platforms.map(p=>({yt:'YouTube',tt:'TikTok',fb:'Facebook',ig:'Instagram'}[p])).join(' · ')}</span>
+        </div>
+      </div>
+      <div class="sch-actions">
+        <button class="btn btn-ghost btn-sm">✏️</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+function getEventsForDay(d) {
+  return scheduleData.filter(s => parseInt(s.date.split('/')[0]) === d);
+}
+function openBulk() { document.getElementById('bulk-panel').style.display = 'block'; fakeBulkUpload(); }
+function closeBulk() { document.getElementById('bulk-panel').style.display = 'none'; }
+function fakeBulkUpload() {
+  const items = ['short_ep1_24h.mp4','short_ep2_credit.mp4','short_ep3_budget.mp4','short_ep4_invest.mp4','short_ep5_saving.mp4'];
+  bulkFiles = items;
+  document.getElementById('bulk-list').innerHTML = items.map((f,i) => `
+    <div class="bulk-item">
+      <div class="bulk-thumb">⚡</div>
+      <div style="flex:1"><div class="bulk-name">${f}</div><div class="bulk-sch" id="bulk-sch-${i}">Chưa lên lịch</div></div>
+      <span class="badge badge-gray" id="bulk-badge-${i}">Chờ</span>
+    </div>
+  `).join('');
+}
+function autoSchedule() {
+  bulkFiles.forEach((f,i) => {
+    const h = 19 + (i * 6);
+    const day = 30 + Math.floor(h/24);
+    const time = (h % 24).toString().padStart(2,'0') + ':00';
+    document.getElementById('bulk-sch-' + i).textContent = `0${day}/07 ${time} · TikTok & Instagram`;
+    document.getElementById('bulk-badge-' + i).className = 'badge badge-green';
+    document.getElementById('bulk-badge-' + i).textContent = '✓ Đã lên lịch';
+  });
+  document.getElementById('sched-count').textContent = scheduleData.length + bulkFiles.length;
+  toast('📅', 'Rải lịch thành công!', `${bulkFiles.length} short đã được lên lịch tự động`);
+}
+function openAddSchedule() { toast('📅', 'Mở form thêm lịch', 'Tính năng đang phát triển'); }
+
+// ====== Library ======
+const libData = [
+  { title: 'Bẫy tiêu dùng tập 1', type: 'long', platforms: ['yt','fb'], date: '28/06', views: 52000, likes: 2100, emoji: '💸', color: '#1a2a4a' },
+  { title: 'Luật 24 giờ Short', type: 'short', platforms: ['tt','ig'], date: '27/06', views: 128000, likes: 8900, emoji: '⚡', color: '#1a3a1a' },
+  { title: 'Chi tiêu theo giá trị', type: 'long', platforms: ['yt'], date: '25/06', views: 38000, likes: 1500, emoji: '💡', color: '#2a1a4a' },
+  { title: 'Sự thật về thẻ tín dụng', type: 'short', platforms: ['tt','ig','yt'], date: '23/06', views: 89000, likes: 5200, emoji: '💳', color: '#3a1a1a' },
+  { title: 'Thiết kế môi trường tài chính', type: 'long', platforms: ['yt','fb'], date: '20/06', views: 41000, likes: 1800, emoji: '🏠', color: '#1a3a3a' },
+  { title: 'Kế hoạch 30 ngày tiết kiệm', type: 'short', platforms: ['tt'], date: '18/06', views: 215000, likes: 14000, emoji: '📅', color: '#3a2a1a' },
+];
+function renderLibrary() {
+  let data = libData.filter(d => {
+    const matchFilter = libFilter === 'all' || d.type === libFilter || d.platforms.includes(libFilter);
+    const matchSearch = !libSearch || d.title.toLowerCase().includes(libSearch.toLowerCase());
+    return matchFilter && matchSearch;
+  });
+  const grid = document.getElementById('lib-grid');
+  if (!data.length) { grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">Không tìm thấy kết quả</div><div class="empty-desc">Thử thay đổi bộ lọc hoặc từ khoá tìm kiếm</div></div>'; return; }
+  grid.innerHTML = data.map(d => `
+    <div class="lib-card">
+      <div class="lib-thumb" style="background:${d.color}">
+        <span style="font-size:36px">${d.emoji}</span>
+        <div class="lib-type-badge"><span class="badge ${d.type==='long'?'badge-blue':'badge-green'}">${d.type==='long'?'Long':'Short'}</span></div>
+        <div class="lib-views">👁 ${formatNum(d.views)}</div>
+      </div>
+      <div class="lib-info">
+        <div class="lib-title">${d.title}</div>
+        <div class="lib-meta">
+          <div class="lib-platforms">${d.platforms.map(p => `<span style="width:16px;height:16px;border-radius:3px;background:${{yt:'#ff0000',tt:'#010101',fb:'#1877f2',ig:'#e1306c'}[p]};display:inline-block"></span>`).join('')}</div>
+          <div class="lib-date">${d.date}</div>
+        </div>
+        <div class="lib-stats">
+          <div class="lib-stat">❤️ <span>${formatNum(d.likes)}</span></div>
+          <div class="lib-stat">💬 <span>${Math.floor(d.likes*0.15)}</span></div>
+          <div class="lib-stat">📊 <span>${(d.likes/d.views*100).toFixed(1)}%</span></div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+function setFilter(el, f) {
+  libFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderLibrary();
+}
+function filterLib(v) { libSearch = v; renderLibrary(); }
+
+// ====== Analytics ======
+function renderAnalytics() {
+  const days = ['T2','T3','T4','T5','T6','T7','CN'];
+  const vals = [42000,58000,31000,89000,54000,112000,78000];
+  const max = Math.max(...vals);
+  document.getElementById('chart-7d').innerHTML = days.map((d,i) => `
+    <div class="bar-wrap">
+      <div class="bar-val">${formatNum(vals[i])}</div>
+      <div class="bar" style="height:${Math.round(vals[i]/max*100)}px;background:${i===3||i===5?'var(--accent)':'var(--bg4)'}"></div>
+      <div class="bar-label">${d}</div>
+    </div>
+  `).join('');
+
+  const platforms = [{name:'YouTube',color:'#ff0000',val:520000,pct:43},{name:'TikTok',color:'#69c9d0',val:410000,pct:34},{name:'Facebook',color:'#1877f2',val:180000,pct:15},{name:'Instagram',color:'#e1306c',val:96000,pct:8}];
+  document.getElementById('platform-perf').innerHTML = platforms.map(p => `
+    <div class="platform-row">
+      <div class="plat-name"><span style="width:10px;height:10px;border-radius:2px;background:${p.color};display:inline-block"></span>${p.name}</div>
+      <div class="plat-bar-wrap"><div class="plat-bar" style="width:${p.pct}%;background:${p.color}"></div></div>
+      <div class="plat-val">${formatNum(p.val)}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('top-videos').innerHTML = libData.slice(0,4).map((d,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:18px;width:28px;text-align:center;color:${i<3?'var(--amber)':'var(--text2)'}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div>
+      <div style="font-size:20px">${d.emoji}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">${d.title}</div><div style="font-size:11px;color:var(--text2)">${formatNum(d.views)} views · ${d.date}</div></div>
+      <div style="font-size:13px;font-weight:700;color:var(--text)">${formatNum(d.views)}</div>
+    </div>
+  `).join('');
+}
+
+// ====== Helpers ======
+function formatNum(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return Math.round(n/1000) + 'K';
+  return n.toString();
+}
+function toast(icon, title, msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ====== Init ======
+renderSchedule();
+renderLibrary();
+renderAnalytics();
+
+// Fix the emoji ordinal hack above
+</script>
+</body>
+</html>
