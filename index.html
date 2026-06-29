@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PublishFlow Pro</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root {
   --bg: #0f0f11;
@@ -764,13 +765,24 @@ select option { background: var(--bg3); }
           <div class="api-item">
             <div class="api-header">
               <div class="api-name"><span style="background:#ff0000;width:20px;height:20px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:10px">▶</span> YouTube</div>
-              <span class="api-status api-disconnected">Chưa kết nối</span>
+              <span class="api-status" id="yt-status-badge" style="background:var(--red-bg);color:var(--red)">Chưa kết nối</span>
             </div>
-            <div class="api-input-wrap">
-              <input type="password" placeholder="YouTube Data API Key...">
-              <button class="btn btn-secondary btn-sm">Kết nối</button>
+            <div id="yt-connect-area">
+              <button class="btn btn-secondary" style="width:100%;justify-content:center;gap:10px" onclick="connectYouTube()">
+                <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Đăng nhập Google để kết nối YouTube
+              </button>
             </div>
-            <div style="margin-top:8px;font-size:11px;color:var(--text2)">→ <a href="#" style="color:var(--accent)">Lấy API key tại Google Console</a></div>
+            <div id="yt-connected-area" style="display:none">
+              <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+                <img id="yt-avatar" style="width:32px;height:32px;border-radius:50%" src="">
+                <div>
+                  <div id="yt-channel-name" style="font-size:13px;font-weight:500;color:var(--text)"></div>
+                  <div style="font-size:11px;color:var(--text2)">Đã kết nối YouTube</div>
+                </div>
+                <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="disconnectYouTube()">Ngắt kết nối</button>
+              </div>
+            </div>
           </div>
 
           <div class="api-item">
@@ -1067,6 +1079,113 @@ function renderPreview(pl) {
   document.getElementById('preview-area').innerHTML = previews[pl] || '<div style="color:var(--text2);text-align:center;padding:40px">Nền tảng này chưa được chọn</div>';
 }
 
+// ====== YouTube OAuth ======
+const YT_CLIENT_ID = '810108711372-un07k478hkjs21f3rr8pjncvs9annnou.apps.googleusercontent.com';
+const YT_SCOPES = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly';
+let ytToken = null;
+let ytTokenClient = null;
+
+function connectYouTube() {
+  if (!window.google) { toast('❌', 'Lỗi', 'Google SDK chưa load. Thử lại sau 2 giây.'); return; }
+  if (!ytTokenClient) {
+    ytTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: YT_CLIENT_ID,
+      scope: YT_SCOPES,
+      callback: async (resp) => {
+        if (resp.error) { toast('❌', 'Lỗi xác thực', resp.error); return; }
+        ytToken = resp.access_token;
+        localStorage.setItem('yt_token', ytToken);
+        await loadYTChannel();
+      }
+    });
+  }
+  ytTokenClient.requestAccessToken();
+}
+
+async function loadYTChannel() {
+  try {
+    const r = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
+      headers: { Authorization: 'Bearer ' + ytToken }
+    });
+    const data = await r.json();
+    if (data.items && data.items.length > 0) {
+      const ch = data.items[0].snippet;
+      document.getElementById('yt-avatar').src = ch.thumbnails?.default?.url || '';
+      document.getElementById('yt-channel-name').textContent = ch.title;
+      document.getElementById('yt-connect-area').style.display = 'none';
+      document.getElementById('yt-connected-area').style.display = 'block';
+      document.getElementById('yt-status-badge').textContent = 'Đã kết nối';
+      document.getElementById('yt-status-badge').style.background = 'var(--green-bg)';
+      document.getElementById('yt-status-badge').style.color = 'var(--green)';
+      toast('✅', 'Kết nối YouTube thành công!', 'Kênh: ' + ch.title);
+    }
+  } catch(e) { toast('❌', 'Không lấy được thông tin kênh', e.message); }
+}
+
+function disconnectYouTube() {
+  ytToken = null;
+  localStorage.removeItem('yt_token');
+  document.getElementById('yt-connect-area').style.display = 'block';
+  document.getElementById('yt-connected-area').style.display = 'none';
+  document.getElementById('yt-status-badge').textContent = 'Chưa kết nối';
+  document.getElementById('yt-status-badge').style.background = 'var(--red-bg)';
+  document.getElementById('yt-status-badge').style.color = 'var(--red)';
+  toast('🔌', 'Đã ngắt kết nối YouTube', '');
+}
+
+async function uploadToYouTube() {
+  if (!ytToken) { toast('⚠️', 'Chưa kết nối YouTube', 'Vào Cài đặt → kết nối trước'); return false; }
+  if (!videoFile) { toast('⚠️', 'Chưa có video', 'Upload video trước ở Bước 1'); return false; }
+
+  const title = document.getElementById('ai-title-yt')?.innerText || document.getElementById('input-title').value || 'Video TVT';
+  const desc = document.getElementById('ai-desc-yt')?.innerText || document.getElementById('input-desc').value || '';
+
+  document.getElementById('pub-status-yt').textContent = '⏳ Đang upload...';
+
+  try {
+    // Bước 1: tạo video resource
+    const meta = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + ytToken,
+        'Content-Type': 'application/json',
+        'X-Upload-Content-Type': videoFile.type,
+        'X-Upload-Content-Length': videoFile.size
+      },
+      body: JSON.stringify({
+        snippet: { title, description: desc, categoryId: '22' },
+        status: { privacyStatus: 'public' }
+      })
+    });
+
+    if (!meta.ok) { throw new Error('Không tạo được upload session: ' + meta.status); }
+    const uploadUrl = meta.headers.get('Location');
+
+    // Bước 2: upload file
+    const upload = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': videoFile.type, 'Content-Length': videoFile.size },
+      body: videoFile
+    });
+
+    if (!upload.ok) throw new Error('Upload thất bại: ' + upload.status);
+    const result = await upload.json();
+    const videoId = result.id;
+    const videoUrl = 'https://youtu.be/' + videoId;
+
+    document.getElementById('pub-status-yt').textContent = '✅ Đã đăng';
+    document.getElementById('pub-status-yt').className = 'pub-status done';
+    const linkEl = document.getElementById('pub-link-yt');
+    linkEl.innerHTML = `<a href="${videoUrl}" target="_blank" style="color:var(--accent)">Xem video →</a>`;
+    return true;
+  } catch(e) {
+    document.getElementById('pub-status-yt').textContent = '❌ Lỗi';
+    document.getElementById('pub-status-yt').className = 'pub-status error';
+    document.getElementById('pub-link-yt').textContent = e.message;
+    return false;
+  }
+}
+
 // ====== Publish ======
 function renderPublishStatus() {
   const active = Object.keys(platforms).filter(k => platforms[k]);
@@ -1082,20 +1201,25 @@ function renderPublishStatus() {
     </div>
   `).join('');
 }
-function publish() {
+async function publish() {
   const active = Object.keys(platforms).filter(k => platforms[k]);
-  active.forEach((pl, i) => {
-    setTimeout(() => {
-      document.getElementById('pub-status-' + pl).textContent = '⏳ Đang đăng...';
-      document.getElementById('pub-status-' + pl).className = 'pub-status pending';
-      setTimeout(() => {
-        document.getElementById('pub-status-' + pl).textContent = '✅ Đã đăng';
-        document.getElementById('pub-status-' + pl).className = 'pub-status done';
-        document.getElementById('pub-link-' + pl).textContent = 'Xem bài đăng →';
-        if (i === active.length - 1) toast('🚀', 'Đăng thành công!', `Đã đăng lên ${active.length} nền tảng`);
-      }, 1500);
-    }, i * 2000);
-  });
+  let done = 0;
+  for (const pl of active) {
+    document.getElementById('pub-status-' + pl).textContent = '⏳ Đang đăng...';
+    document.getElementById('pub-status-' + pl).className = 'pub-status pending';
+    let ok = false;
+    if (pl === 'yt' && ytToken && videoFile) {
+      ok = await uploadToYouTube();
+    } else {
+      await new Promise(r => setTimeout(r, 1500));
+      document.getElementById('pub-status-' + pl).textContent = pl === 'yt' && !ytToken ? '⚠️ Chưa kết nối' : '✅ Đã đăng';
+      document.getElementById('pub-status-' + pl).className = 'pub-status ' + (pl === 'yt' && !ytToken ? 'pending' : 'done');
+      document.getElementById('pub-link-' + pl).textContent = pl === 'yt' && !ytToken ? 'Vào Cài đặt → kết nối YouTube' : 'Xem bài đăng →';
+      ok = true;
+    }
+    done++;
+    if (done === active.length) toast('🚀', 'Hoàn tất!', `Đã xử lý ${active.length} nền tảng`);
+  }
 }
 
 // ====== Schedule ======
@@ -1271,8 +1395,6 @@ function toast(icon, title, msg) {
 renderSchedule();
 renderLibrary();
 renderAnalytics();
-
-// Fix the emoji ordinal hack above
 </script>
 </body>
 </html>
