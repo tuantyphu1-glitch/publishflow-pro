@@ -1173,6 +1173,22 @@ async function uploadToYouTube() {
     const videoId = result.id;
     const videoUrl = 'https://youtu.be/' + videoId;
 
+    // Upload thumbnail nếu có
+    if (thumbFile && videoId) {
+      try {
+        document.getElementById('pub-status-yt').textContent = '⏳ Đang upload thumbnail...';
+        const thumbRes = await fetch(`https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${videoId}&uploadType=media`, {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer ' + ytToken,
+            'Content-Type': thumbFile.type
+          },
+          body: thumbFile
+        });
+        if (!thumbRes.ok) console.warn('Thumbnail upload failed:', thumbRes.status);
+      } catch(te) { console.warn('Thumbnail error:', te); }
+    }
+
     document.getElementById('pub-status-yt').textContent = '✅ Đã đăng';
     document.getElementById('pub-status-yt').className = 'pub-status done';
     const linkEl = document.getElementById('pub-link-yt');
