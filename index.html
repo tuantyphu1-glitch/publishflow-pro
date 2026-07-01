@@ -797,13 +797,25 @@ select option { background: var(--bg3); }
             <div style="margin-top:8px;font-size:11px;color:var(--text2)">→ <a href="#" style="color:var(--accent)">TikTok Developer Portal</a></div>
           </div>
 
-          <div class="api-item">
+          <div class="api-item" id="fb-api-item">
             <div class="api-header">
               <div class="api-name"><span style="background:#1877f2;width:20px;height:20px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700">f</span> Facebook</div>
-              <span class="api-status api-connected">Đã kết nối</span>
+              <span class="api-status" id="fb-status-badge" style="background:var(--red-bg);color:var(--red)">Chưa kết nối</span>
             </div>
-            <div style="font-size:12px;color:var(--text2)">Trang: <strong style="color:var(--text)">TVT Tư Duy</strong> · Token hết hạn: 29/09/2026</div>
-            <button class="btn btn-danger btn-sm" style="margin-top:8px">Ngắt kết nối</button>
+            <div id="fb-connect-area">
+              <div class="api-input-wrap" style="margin-bottom:6px">
+                <input type="password" id="fb-token-input" placeholder="Page Access Token...">
+              </div>
+              <div class="api-input-wrap">
+                <input type="text" id="fb-pageid-input" placeholder="Page ID (vd: 123456789)">
+                <button class="btn btn-secondary btn-sm" onclick="connectFacebook()">Kết nối</button>
+              </div>
+              <div style="margin-top:6px;font-size:11px;color:var(--text2)">Lấy token tại: Meta for Developers → Graph API Explorer</div>
+            </div>
+            <div id="fb-connected-area" style="display:none">
+              <div style="font-size:12px;color:var(--text2)" id="fb-page-info">Đã kết nối</div>
+              <button class="btn btn-danger btn-sm" style="margin-top:8px" onclick="disconnectFacebook()">Ngắt kết nối</button>
+            </div>
           </div>
 
           <div class="api-item">
@@ -1081,9 +1093,57 @@ function renderPreview(pl) {
 
 // ====== YouTube OAuth ======
 const YT_CLIENT_ID = '810108711372-un07k478hkjs21f3rr8pjncvs9annnou.apps.googleusercontent.com';
-const YT_SCOPES = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly';
+const YT_SCOPES = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.readonly';
 let ytToken = null;
 let ytTokenClient = null;
+
+// ====== Facebook ======
+let fbToken = localStorage.getItem('fb_token') || null;
+let fbPageId = localStorage.getItem('fb_page_id') || null;
+
+function initFacebookUI() {
+  if (fbToken && fbPageId) {
+    document.getElementById('fb-connect-area').style.display = 'none';
+    document.getElementById('fb-connected-area').style.display = 'block';
+    document.getElementById('fb-status-badge').textContent = 'Đã kết nối';
+    document.getElementById('fb-status-badge').style.background = 'var(--green-bg)';
+    document.getElementById('fb-status-badge').style.color = 'var(--green)';
+    document.getElementById('fb-page-info').textContent = 'Page ID: ' + fbPageId;
+  }
+}
+
+async function connectFacebook() {
+  const token = document.getElementById('fb-token-input').value.trim();
+  const pageId = document.getElementById('fb-pageid-input').value.trim();
+  if (!token || !pageId) { toast('⚠️', 'Thiếu thông tin', 'Nhập đủ Page Token và Page ID'); return; }
+  try {
+    const r = await fetch(`https://graph.facebook.com/v19.0/${pageId}?fields=name&access_token=${token}`);
+    const data = await r.json();
+    if (data.error) throw new Error(data.error.message);
+    fbToken = token;
+    fbPageId = pageId;
+    localStorage.setItem('fb_token', token);
+    localStorage.setItem('fb_page_id', pageId);
+    document.getElementById('fb-connect-area').style.display = 'none';
+    document.getElementById('fb-connected-area').style.display = 'block';
+    document.getElementById('fb-status-badge').textContent = 'Đã kết nối';
+    document.getElementById('fb-status-badge').style.background = 'var(--green-bg)';
+    document.getElementById('fb-status-badge').style.color = 'var(--green)';
+    document.getElementById('fb-page-info').textContent = 'Trang: ' + data.name;
+    toast('✅', 'Kết nối Facebook thành công!', 'Trang: ' + data.name);
+  } catch(e) { toast('❌', 'Lỗi kết nối Facebook', e.message); }
+}
+
+function disconnectFacebook() {
+  fbToken = null; fbPageId = null;
+  localStorage.removeItem('fb_token'); localStorage.removeItem('fb_page_id');
+  document.getElementById('fb-connect-area').style.display = 'block';
+  document.getElementById('fb-connected-area').style.display = 'none';
+  document.getElementById('fb-status-badge').textContent = 'Chưa kết nối';
+  document.getElementById('fb-status-badge').style.background = 'var(--red-bg)';
+  document.getElementById('fb-status-badge').style.color = 'var(--red)';
+  toast('🔌', 'Đã ngắt kết nối Facebook', '');
+}
 
 function connectYouTube() {
   if (!window.google) { toast('❌', 'Lỗi', 'Google SDK chưa load. Thử lại sau 2 giây.'); return; }
@@ -1143,32 +1203,34 @@ async function uploadToYouTube() {
   document.getElementById('pub-status-yt').textContent = '⏳ Đang upload...';
 
   try {
-    // Bước 1: tạo video resource
-    const meta = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status', {
+    // Dùng multipart upload để tránh CORS issue với resumable Location header
+    const metadata = { snippet: { title, description: desc, categoryId: '22' }, status: { privacyStatus: 'public' } };
+    const boundary = 'tvt_boundary_' + Date.now();
+    const metaStr = JSON.stringify(metadata);
+    const encoder = new TextEncoder();
+    const metaBytes = encoder.encode(
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metaStr}\r\n--${boundary}\r\nContent-Type: ${videoFile.type}\r\n\r\n`
+    );
+    const closing = encoder.encode(`\r\n--${boundary}--`);
+    const videoBytes = await videoFile.arrayBuffer();
+    const body = new Uint8Array(metaBytes.byteLength + videoBytes.byteLength + closing.byteLength);
+    body.set(metaBytes, 0);
+    body.set(new Uint8Array(videoBytes), metaBytes.byteLength);
+    body.set(closing, metaBytes.byteLength + videoBytes.byteLength);
+
+    const upload = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status', {
       method: 'POST',
       headers: {
         Authorization: 'Bearer ' + ytToken,
-        'Content-Type': 'application/json',
-        'X-Upload-Content-Type': videoFile.type,
-        'X-Upload-Content-Length': videoFile.size
+        'Content-Type': `multipart/related; boundary=${boundary}`
       },
-      body: JSON.stringify({
-        snippet: { title, description: desc, categoryId: '22' },
-        status: { privacyStatus: 'public' }
-      })
+      body
     });
 
-    if (!meta.ok) { throw new Error('Không tạo được upload session: ' + meta.status); }
-    const uploadUrl = meta.headers.get('Location');
-
-    // Bước 2: upload file
-    const upload = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: { 'Content-Type': videoFile.type, 'Content-Length': videoFile.size },
-      body: videoFile
-    });
-
-    if (!upload.ok) throw new Error('Upload thất bại: ' + upload.status);
+    if (!upload.ok) {
+      const errText = await upload.text();
+      throw new Error(`Upload thất bại (${upload.status}): ${errText.substring(0,200)}`);
+    }
     const result = await upload.json();
     const videoId = result.id;
     const videoUrl = 'https://youtu.be/' + videoId;
@@ -1179,10 +1241,7 @@ async function uploadToYouTube() {
         document.getElementById('pub-status-yt').textContent = '⏳ Đang upload thumbnail...';
         const thumbRes = await fetch(`https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${videoId}&uploadType=media`, {
           method: 'POST',
-          headers: {
-            Authorization: 'Bearer ' + ytToken,
-            'Content-Type': thumbFile.type
-          },
+          headers: { Authorization: 'Bearer ' + ytToken, 'Content-Type': thumbFile.type },
           body: thumbFile
         });
         if (!thumbRes.ok) console.warn('Thumbnail upload failed:', thumbRes.status);
@@ -1198,6 +1257,52 @@ async function uploadToYouTube() {
     document.getElementById('pub-status-yt').textContent = '❌ Lỗi';
     document.getElementById('pub-status-yt').className = 'pub-status error';
     document.getElementById('pub-link-yt').textContent = e.message;
+    console.error('YouTube upload error:', e);
+    return false;
+  }
+}
+
+async function uploadToFacebook() {
+  if (!fbToken || !fbPageId) {
+    document.getElementById('pub-status-fb').textContent = '⚠️ Chưa có token';
+    document.getElementById('pub-link-fb').textContent = 'Vào Cài đặt → nhập FB Page Token';
+    return false;
+  }
+  if (!videoFile) { return false; }
+
+  const title = document.getElementById('ai-title-yt')?.innerText || document.getElementById('input-title').value || 'Video TVT';
+  const desc = document.getElementById('ai-desc-yt')?.innerText || document.getElementById('input-desc').value || '';
+
+  document.getElementById('pub-status-fb').textContent = '⏳ Đang upload...';
+
+  try {
+    const formData = new FormData();
+    formData.append('source', videoFile);
+    formData.append('title', title);
+    formData.append('description', desc);
+    formData.append('access_token', fbToken);
+
+    const res = await fetch(`https://graph-video.facebook.com/v19.0/${fbPageId}/videos`, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || 'Upload FB thất bại: ' + res.status);
+    }
+    const result = await res.json();
+    const videoUrl = `https://www.facebook.com/video.php?v=${result.id}`;
+
+    document.getElementById('pub-status-fb').textContent = '✅ Đã đăng';
+    document.getElementById('pub-status-fb').className = 'pub-status done';
+    document.getElementById('pub-link-fb').innerHTML = `<a href="${videoUrl}" target="_blank" style="color:var(--accent)">Xem video →</a>`;
+    return true;
+  } catch(e) {
+    document.getElementById('pub-status-fb').textContent = '❌ Lỗi';
+    document.getElementById('pub-status-fb').className = 'pub-status error';
+    document.getElementById('pub-link-fb').textContent = e.message;
+    console.error('Facebook upload error:', e);
     return false;
   }
 }
@@ -1223,15 +1328,16 @@ async function publish() {
   for (const pl of active) {
     document.getElementById('pub-status-' + pl).textContent = '⏳ Đang đăng...';
     document.getElementById('pub-status-' + pl).className = 'pub-status pending';
-    let ok = false;
-    if (pl === 'yt' && ytToken && videoFile) {
-      ok = await uploadToYouTube();
-    } else {
-      await new Promise(r => setTimeout(r, 1500));
-      document.getElementById('pub-status-' + pl).textContent = pl === 'yt' && !ytToken ? '⚠️ Chưa kết nối' : '✅ Đã đăng';
-      document.getElementById('pub-status-' + pl).className = 'pub-status ' + (pl === 'yt' && !ytToken ? 'pending' : 'done');
-      document.getElementById('pub-link-' + pl).textContent = pl === 'yt' && !ytToken ? 'Vào Cài đặt → kết nối YouTube' : 'Xem bài đăng →';
-      ok = true;
+    if (pl === 'yt') {
+      await uploadToYouTube();
+    } else if (pl === 'fb') {
+      await uploadToFacebook();
+    } else if (pl === 'ig') {
+      document.getElementById('pub-status-ig').textContent = '⚠️ Chưa hỗ trợ';
+      document.getElementById('pub-link-ig').textContent = 'Instagram cần URL công khai, upload thủ công';
+    } else if (pl === 'tt') {
+      document.getElementById('pub-status-tt').textContent = '⚠️ Chưa kết nối';
+      document.getElementById('pub-link-tt').textContent = 'TikTok cần Developer account';
     }
     done++;
     if (done === active.length) toast('🚀', 'Hoàn tất!', `Đã xử lý ${active.length} nền tảng`);
@@ -1411,6 +1517,8 @@ function toast(icon, title, msg) {
 renderSchedule();
 renderLibrary();
 renderAnalytics();
+document.addEventListener('DOMContentLoaded', initFacebookUI);
+if (document.readyState !== 'loading') initFacebookUI();
 </script>
 </body>
 </html>
