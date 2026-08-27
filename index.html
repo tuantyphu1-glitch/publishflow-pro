@@ -373,7 +373,7 @@ select option { background: var(--bg3); }
     <nav>
       <div class="nav-section">Sản xuất</div>
       <div class="nav-item active" onclick="showPage('create')"><span class="nav-icon">✏️</span> Tạo mới</div>
-      <div class="nav-item" onclick="showPage('schedule')"><span class="nav-icon">📅</span> Lên lịch <span class="nav-badge" id="sched-count">3</span></div>
+      <div class="nav-item" onclick="showPage('schedule')"><span class="nav-icon">📅</span> Lên lịch <span class="nav-badge" id="sched-count">6</span></div>
       <div class="nav-section">Quản lý</div>
       <div class="nav-item" onclick="showPage('library')"><span class="nav-icon">🗂️</span> Thư viện</div>
       <div class="nav-item" onclick="showPage('analytics')"><span class="nav-icon">📊</span> Analytics</div>
@@ -1350,6 +1350,8 @@ const scheduleData = [
   { title: 'Short: Luật 24 giờ TikTok', type: 'short', date: '30/06', time: '21:00', platforms: ['tt', 'ig'], emoji: '⚡' },
   { title: 'Chi tiêu theo giá trị — Full', type: 'long', date: '02/07', time: '15:00', platforms: ['yt'], emoji: '💡' },
   { title: 'Short: Sự thật về tín dụng', type: 'short', date: '03/07', time: '07:00', platforms: ['tt'], emoji: '💳' },
+  { title: 'TVT Insight — Long-form Ep.1 (EN)', type: 'long', date: '04/07', time: '20:00', platforms: ['yt'], emoji: '🌍', channel: 'TVT Insight', usTime: '9:00 SA (giờ Mỹ, EDT — múi Đông Mỹ)' },
+  { title: 'TVT Insight — Short: Quick Insight #1 (EN)', type: 'short', date: '05/07', time: '06:00', platforms: ['yt', 'ig'], emoji: '⚡', channel: 'TVT Insight', usTime: '7:00 CH hôm trước (giờ Mỹ, EDT — múi Đông Mỹ)' },
 ];
 function renderSchedule() {
   // Calendar
@@ -1379,8 +1381,10 @@ function renderSchedule() {
         <div class="sch-title">${s.title}</div>
         <div class="sch-meta">
           <span class="badge ${s.type==='long'?'badge-blue':'badge-green'}">${s.type==='long'?'Long-form':'Short'}</span>
+          ${s.channel ? `<span class="badge badge-gray" style="margin-left:8px">${s.channel}</span>` : ''}
           <span style="margin-left:8px">${s.platforms.map(p=>({yt:'YouTube',tt:'TikTok',fb:'Facebook',ig:'Instagram'}[p])).join(' · ')}</span>
         </div>
+        ${s.usTime ? `<div class="sch-meta" style="margin-top:2px;color:var(--text2);font-size:11px">🇺🇸 ≈ ${s.usTime}</div>` : ''}
       </div>
       <div class="sch-actions">
         <button class="btn btn-ghost btn-sm">✏️</button>
