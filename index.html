@@ -649,6 +649,50 @@ select option { background: var(--bg3); }
         </div>
       </div>
 
+      <!-- Add schedule panel (hidden by default) -->
+      <div id="add-schedule-panel" style="display:none;margin-bottom:20px">
+        <div class="card">
+          <div class="card-title" style="justify-content:space-between">📅 Thêm lịch đăng mới <button class="btn btn-ghost btn-sm" onclick="closeAddSchedule()">✕</button></div>
+          <div class="grid-2" style="margin-bottom:12px">
+            <div class="form-group" style="margin-bottom:0">
+              <label>Kênh</label>
+              <select id="as-channel"><option>TVT Tư Duy</option><option selected>TVT Insight</option></select>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>Định dạng</label>
+              <select id="as-type"><option value="long">Long-form</option><option value="short" selected>Short</option></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Tiêu đề</label>
+            <input type="text" id="as-title" placeholder="Vd: TVT Insight — Quick Insight #2 (EN)">
+          </div>
+          <div class="grid-2" style="margin-bottom:12px">
+            <div class="form-group" style="margin-bottom:0">
+              <label>Múi giờ nhập</label>
+              <select id="as-tz" onchange="previewAddSchedule()">
+                <option value="ET">Giờ Mỹ — Miền Đông (New York, EST/EDT)</option>
+                <option value="ICT">Giờ Việt Nam (ICT, UTC+7)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>Ngày giờ đăng (theo múi giờ trên)</label>
+              <input type="datetime-local" id="as-datetime" onchange="previewAddSchedule()">
+            </div>
+          </div>
+          <div id="as-preview" style="font-size:12px;color:var(--text2);margin-bottom:12px"></div>
+          <div class="form-group">
+            <label>Video (để đăng thật lên YouTube — bỏ trống nếu chỉ ghi lịch nháp)</label>
+            <input type="file" id="as-video" accept="video/*" onchange="document.getElementById('as-video-name').textContent = this.files[0]?.name || ''">
+            <div id="as-video-name" style="font-size:11px;color:var(--text2);margin-top:4px"></div>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button class="btn btn-secondary btn-sm" onclick="closeAddSchedule()">Hủy</button>
+            <button class="btn btn-primary btn-sm" onclick="submitAddSchedule()">Lưu lịch</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Bulk upload modal (hidden by default) -->
       <div id="bulk-panel" style="display:none">
         <div class="card">
@@ -1193,26 +1237,32 @@ function disconnectYouTube() {
   toast('🔌', 'Đã ngắt kết nối YouTube', '');
 }
 
-async function uploadToYouTube() {
+async function uploadToYouTube(opts = {}) {
+  const file = opts.file || videoFile;
+  const statusEl = opts.statusElId === undefined ? document.getElementById('pub-status-yt') : (opts.statusElId ? document.getElementById(opts.statusElId) : null);
+  const linkEl = opts.linkElId === undefined ? document.getElementById('pub-link-yt') : (opts.linkElId ? document.getElementById(opts.linkElId) : null);
+
   if (!ytToken) { toast('⚠️', 'Chưa kết nối YouTube', 'Vào Cài đặt → kết nối trước'); return false; }
-  if (!videoFile) { toast('⚠️', 'Chưa có video', 'Upload video trước ở Bước 1'); return false; }
+  if (!file) { toast('⚠️', 'Chưa có video', 'Upload video trước ở Bước 1'); return false; }
 
-  const title = document.getElementById('ai-title-yt')?.innerText || document.getElementById('input-title').value || 'Video TVT';
-  const desc = document.getElementById('ai-desc-yt')?.innerText || document.getElementById('input-desc').value || '';
+  const title = opts.title || document.getElementById('ai-title-yt')?.innerText || document.getElementById('input-title').value || 'Video TVT';
+  const desc = opts.desc || document.getElementById('ai-desc-yt')?.innerText || document.getElementById('input-desc').value || '';
 
-  document.getElementById('pub-status-yt').textContent = '⏳ Đang upload...';
+  if (statusEl) statusEl.textContent = '⏳ Đang upload...';
 
   try {
     // Dùng multipart upload để tránh CORS issue với resumable Location header
-    const metadata = { snippet: { title, description: desc, categoryId: '22' }, status: { privacyStatus: 'public' } };
+    // publishAt (RFC3339) => đăng ở chế độ private, YouTube tự động công khai đúng giờ đã lên lịch
+    const status = opts.publishAt ? { privacyStatus: 'private', publishAt: opts.publishAt } : { privacyStatus: 'public' };
+    const metadata = { snippet: { title, description: desc, categoryId: '22' }, status };
     const boundary = 'tvt_boundary_' + Date.now();
     const metaStr = JSON.stringify(metadata);
     const encoder = new TextEncoder();
     const metaBytes = encoder.encode(
-      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metaStr}\r\n--${boundary}\r\nContent-Type: ${videoFile.type}\r\n\r\n`
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metaStr}\r\n--${boundary}\r\nContent-Type: ${file.type}\r\n\r\n`
     );
     const closing = encoder.encode(`\r\n--${boundary}--`);
-    const videoBytes = await videoFile.arrayBuffer();
+    const videoBytes = await file.arrayBuffer();
     const body = new Uint8Array(metaBytes.byteLength + videoBytes.byteLength + closing.byteLength);
     body.set(metaBytes, 0);
     body.set(new Uint8Array(videoBytes), metaBytes.byteLength);
@@ -1236,27 +1286,28 @@ async function uploadToYouTube() {
     const videoUrl = 'https://youtu.be/' + videoId;
 
     // Upload thumbnail nếu có
-    if (thumbFile && videoId) {
+    if ((opts.thumbFile || thumbFile) && videoId) {
       try {
-        document.getElementById('pub-status-yt').textContent = '⏳ Đang upload thumbnail...';
+        if (statusEl) statusEl.textContent = '⏳ Đang upload thumbnail...';
+        const tf = opts.thumbFile || thumbFile;
         const thumbRes = await fetch(`https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${videoId}&uploadType=media`, {
           method: 'POST',
-          headers: { Authorization: 'Bearer ' + ytToken, 'Content-Type': thumbFile.type },
-          body: thumbFile
+          headers: { Authorization: 'Bearer ' + ytToken, 'Content-Type': tf.type },
+          body: tf
         });
         if (!thumbRes.ok) console.warn('Thumbnail upload failed:', thumbRes.status);
       } catch(te) { console.warn('Thumbnail error:', te); }
     }
 
-    document.getElementById('pub-status-yt').textContent = '✅ Đã đăng';
-    document.getElementById('pub-status-yt').className = 'pub-status done';
-    const linkEl = document.getElementById('pub-link-yt');
-    linkEl.innerHTML = `<a href="${videoUrl}" target="_blank" style="color:var(--accent)">Xem video →</a>`;
-    return true;
+    if (statusEl) {
+      statusEl.textContent = opts.publishAt ? '✅ Đã tải lên — chờ tự động công khai theo lịch' : '✅ Đã đăng';
+      statusEl.className = 'pub-status done';
+    }
+    if (linkEl) linkEl.innerHTML = `<a href="${videoUrl}" target="_blank" style="color:var(--accent)">Xem video →</a>`;
+    return { ok: true, videoId, videoUrl };
   } catch(e) {
-    document.getElementById('pub-status-yt').textContent = '❌ Lỗi';
-    document.getElementById('pub-status-yt').className = 'pub-status error';
-    document.getElementById('pub-link-yt').textContent = e.message;
+    if (statusEl) { statusEl.textContent = '❌ Lỗi'; statusEl.className = 'pub-status error'; }
+    if (linkEl) linkEl.textContent = e.message;
     console.error('YouTube upload error:', e);
     return false;
   }
@@ -1421,7 +1472,110 @@ function autoSchedule() {
   document.getElementById('sched-count').textContent = scheduleData.length + bulkFiles.length;
   toast('📅', 'Rải lịch thành công!', `${bulkFiles.length} short đã được lên lịch tự động`);
 }
-function openAddSchedule() { toast('📅', 'Mở form thêm lịch', 'Tính năng đang phát triển'); }
+// ====== Add schedule (real YouTube scheduled publish) ======
+function nthSundayUTC(y, month, n) {
+  let count = 0;
+  for (let day = 1; day <= 31; day++) {
+    const dt = new Date(Date.UTC(y, month - 1, day));
+    if (dt.getUTCMonth() !== month - 1) break;
+    if (dt.getUTCDay() === 0) { count++; if (count === n) return dt; }
+  }
+}
+function isUSEasternDST(y, m, d) {
+  // Quy tắc DST Mỹ: từ Chủ Nhật thứ 2 tháng 3 đến Chủ Nhật đầu tháng 11 (xấp xỉ, bỏ qua giờ chuyển đổi chính xác 2AM)
+  const dstStart = nthSundayUTC(y, 3, 2);
+  const dstEnd = nthSundayUTC(y, 11, 1);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return date >= dstStart && date < dstEnd;
+}
+// Chuyển giờ địa phương (nhập theo tz 'ET' hoặc 'ICT') sang thời điểm UTC thực (Date object)
+function localToUTC(dateStr, timeStr, tz) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const [hh, mm] = timeStr.split(':').map(Number);
+  const offsetHours = tz === 'ICT' ? 7 : (isUSEasternDST(y, m, d) ? -4 : -5);
+  const asIfUTC = Date.UTC(y, m - 1, d, hh, mm);
+  return new Date(asIfUTC - offsetHours * 3600 * 1000);
+}
+// Trích xuất các thành phần ngày/giờ theo một timeZone cụ thể, không phụ thuộc thứ tự chuỗi locale
+function partsInTZ(utcDate, timeZone) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+  }).formatToParts(utcDate);
+  const get = (t) => parts.find(p => p.type === t).value;
+  return { year: get('year'), month: get('month'), day: get('day'), hour: get('hour') === '24' ? '00' : get('hour'), minute: get('minute') };
+}
+function fmtICT(utcDate) {
+  const p = partsInTZ(utcDate, 'Asia/Ho_Chi_Minh');
+  return { date: `${p.day}/${p.month}`, time: `${p.hour}:${p.minute}`, label: `${p.hour}:${p.minute} ${p.day}/${p.month}` };
+}
+function fmtET(utcDate) {
+  const p = partsInTZ(utcDate, 'America/New_York');
+  const label = isUSEasternDST(utcDate.getUTCFullYear(), utcDate.getUTCMonth() + 1, utcDate.getUTCDate()) ? 'EDT' : 'EST';
+  return `${p.hour}:${p.minute} ${p.day}/${p.month} (${label})`;
+}
+function previewAddSchedule() {
+  const tz = document.getElementById('as-tz').value;
+  const dtVal = document.getElementById('as-datetime').value;
+  const previewEl = document.getElementById('as-preview');
+  if (!dtVal) { previewEl.textContent = ''; return; }
+  const [dateStr, timeStr] = dtVal.split('T');
+  const utc = localToUTC(dateStr, timeStr, tz);
+  previewEl.innerHTML = `🇻🇳 Giờ VN: <b>${fmtICT(utc).label}</b> &nbsp;·&nbsp; 🇺🇸 Giờ Mỹ (ET): <b>${fmtET(utc)}</b>`;
+}
+function openAddSchedule() {
+  document.getElementById('add-schedule-panel').style.display = 'block';
+  document.getElementById('bulk-panel').style.display = 'none';
+  previewAddSchedule();
+}
+function closeAddSchedule() { document.getElementById('add-schedule-panel').style.display = 'none'; }
+async function submitAddSchedule() {
+  const channel = document.getElementById('as-channel').value;
+  const type = document.getElementById('as-type').value;
+  const title = document.getElementById('as-title').value.trim() || `${channel} — ${type === 'long' ? 'Long-form' : 'Short'}`;
+  const tz = document.getElementById('as-tz').value;
+  const dtVal = document.getElementById('as-datetime').value;
+  const videoInput = document.getElementById('as-video');
+  const file = videoInput.files[0];
+
+  if (!dtVal) { toast('⚠️', 'Thiếu ngày giờ', 'Chọn ngày giờ đăng trước'); return; }
+  const [dateStr, timeStr] = dtVal.split('T');
+  const utc = localToUTC(dateStr, timeStr, tz);
+  const publishAt = utc.toISOString();
+  const ict = fmtICT(utc);
+  const etLabel = fmtET(utc);
+
+  let entry = {
+    title, type, date: ict.date, time: ict.time,
+    platforms: ['yt'], emoji: type === 'long' ? '🌍' : '⚡', channel,
+    usTime: etLabel + ' (giờ Mỹ)'
+  };
+
+  if (file) {
+    if (!ytToken) {
+      toast('⚠️', 'Chưa kết nối YouTube', 'Vào Cài đặt → kết nối YouTube trước khi đăng video thật. Đã lưu lịch nháp.');
+    } else {
+      toast('⏳', 'Đang tải video lên YouTube...', `Sẽ tự động công khai lúc ${ict.label} giờ VN`);
+      const res = await uploadToYouTube({ file, title, publishAt, statusElId: null, linkElId: null });
+      if (res && res.ok) {
+        entry.videoUrl = res.videoUrl;
+        toast('✅', 'Đã lên lịch trên YouTube!', `Video sẽ tự động công khai lúc ${ict.label} giờ VN (${etLabel})`);
+      } else {
+        toast('❌', 'Upload thất bại', 'Đã lưu lịch nháp, kiểm tra kết nối YouTube ở Cài đặt và thử lại');
+      }
+    }
+  } else {
+    toast('📅', 'Đã lưu lịch nháp', 'Chưa gắn video — quay lại đây và chọn video để đăng thật lên YouTube');
+  }
+
+  scheduleData.push(entry);
+  closeAddSchedule();
+  document.getElementById('as-title').value = '';
+  document.getElementById('as-datetime').value = '';
+  videoInput.value = '';
+  document.getElementById('as-video-name').textContent = '';
+  renderSchedule();
+  document.getElementById('sched-count').textContent = scheduleData.length;
+}
 
 // ====== Library ======
 const libData = [
