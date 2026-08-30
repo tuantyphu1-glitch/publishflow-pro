@@ -3,6 +3,8 @@ import type { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 import { UpdateProviderConfigRequestSchema } from '@/lib/validation/schemas';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const configs = await db.providerConfig.findMany({ orderBy: [{ capability: 'asc' }, { providerId: 'asc' }] });
   return NextResponse.json(configs);

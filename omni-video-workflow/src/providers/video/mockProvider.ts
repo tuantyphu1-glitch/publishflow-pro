@@ -10,6 +10,11 @@ const RESOLUTION_HEIGHT: Record<VideoGenerationRequest['resolution'], number> = 
   '1080p': 1080,
 };
 
+/** libx264 + yuv420p require even width/height; 9:16 math (e.g. 720*9/16=405) is often odd. */
+export function evenify(n: number): number {
+  return Math.round(n / 2) * 2;
+}
+
 /**
  * Real image-to-video synthesis using ffmpeg (not a fake/no-op): loops the source
  * image for `durationSeconds`, applies a slow zoom (Ken Burns effect) so the output
@@ -26,8 +31,10 @@ export class MockVideoProvider implements VideoProvider {
     const outputPath = path.join(tmpDir, `omni-mock-out-${randomUUID()}.mp4`);
     await fs.writeFile(inputPath, input.sourceImageBuffer);
 
-    const targetHeight = RESOLUTION_HEIGHT[input.resolution];
-    const targetWidth = input.aspectRatio === '16:9' ? Math.round((targetHeight * 16) / 9) : input.aspectRatio === '1:1' ? targetHeight : Math.round((targetHeight * 9) / 16);
+    const targetHeight = evenify(RESOLUTION_HEIGHT[input.resolution]);
+    const rawWidth =
+      input.aspectRatio === '16:9' ? (targetHeight * 16) / 9 : input.aspectRatio === '1:1' ? targetHeight : (targetHeight * 9) / 16;
+    const targetWidth = evenify(rawWidth);
     const fps = 30;
     const totalFrames = Math.max(1, Math.round(input.durationSeconds * fps));
 
@@ -40,7 +47,7 @@ export class MockVideoProvider implements VideoProvider {
             `zoompan=z='min(zoom+0.0008,1.15)':d=${totalFrames}:s=${targetWidth}x${targetHeight}:fps=${fps}`,
             `format=yuv420p`,
           ])
-          .outputOptions(['-t', String(input.durationSeconds), '-movflags', '+faststart'])
+          .outputOptions(['-movflags', '+faststart'])
           .videoCodec('libx264')
           .noAudio()
           .on('progress', (p) => {
