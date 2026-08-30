@@ -1,0 +1,248 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AspectRatio {
+  R9_16
+  R16_9
+  R1_1
+}
+
+enum ProjectStatus {
+  DRAFT
+  ANALYZING
+  STORYBOARD
+  GENERATING
+  RENDERING
+  COMPLETED
+  FAILED
+}
+
+enum SceneStatus {
+  PENDING
+  IMAGE_QUEUED
+  IMAGE_READY
+  VIDEO_QUEUED
+  VIDEO_READY
+  VOICE_READY
+  APPROVED
+  FAILED
+}
+
+enum JobStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum JobType {
+  SCRIPT_ANALYSIS
+  IMAGE_GENERATION
+  IMAGE_VALIDATION
+  VIDEO_GENERATION
+  TTS
+  SUBTITLE
+  RENDER
+}
+
+enum AssetType {
+  IMAGE
+  VIDEO
+  AUDIO
+  SUBTITLE
+  FINAL_VIDEO
+}
+
+enum ProviderCapability {
+  LLM
+  IMAGE
+  VIDEO
+  TTS
+}
+
+model Project {
+  id             String        @id @default(cuid())
+  name           String
+  workflowId     String
+  language       String        @default("vi")
+  aspectRatio    AspectRatio   @default(R9_16)
+  resolution     String        @default("1080x1920")
+  targetDuration Int           @default(60)
+  script         String
+  status         ProjectStatus @default(DRAFT)
+  analysisJson   Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  scenes     Scene[]
+  characters ProjectCharacter[]
+  products   ProjectProduct[]
+  jobs       GenerationJob[]
+  renders    Render[]
+
+  @@index([workflowId])
+}
+
+model Scene {
+  id                String      @id @default(cuid())
+  projectId         String
+  project           Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  index             Int
+  duration          Int
+  voiceover         String
+  visualDescription String
+  imagePrompt       String
+  videoPrompt       String
+  camera            String?
+  movement          String?
+  lighting          String?
+  transition        String?
+  status            SceneStatus @default(PENDING)
+
+  imageAssetId String? @unique
+  videoAssetId String? @unique
+  audioAssetId String? @unique
+  imageAsset   Asset?  @relation("SceneImage", fields: [imageAssetId], references: [id])
+  videoAsset   Asset?  @relation("SceneVideo", fields: [videoAssetId], references: [id])
+  audioAsset   Asset?  @relation("SceneAudio", fields: [audioAssetId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, index])
+}
+
+model Character {
+  id              String             @id @default(cuid())
+  name            String
+  description     String
+  metadata        Json?
+  referenceImages Asset[]            @relation("CharacterReference")
+  projects        ProjectCharacter[]
+  createdAt       DateTime           @default(now())
+}
+
+model ProjectCharacter {
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  characterId String
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, characterId])
+}
+
+model Product {
+  id              String           @id @default(cuid())
+  name            String
+  description     String
+  color           String?
+  material        String?
+  shape           String?
+  visibleDetails  String?
+  metadata        Json?
+  referenceImages Asset[]          @relation("ProductReference")
+  projects        ProjectProduct[]
+  createdAt       DateTime         @default(now())
+}
+
+model ProjectProduct {
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, productId])
+}
+
+model Asset {
+  id              String    @id @default(cuid())
+  type            AssetType
+  storageKey      String
+  url             String
+  provider        String?
+  model           String?
+  durationSeconds Float?
+  metadata        Json?
+  createdAt       DateTime  @default(now())
+
+  sceneAsImage Scene? @relation("SceneImage")
+  sceneAsVideo Scene? @relation("SceneVideo")
+  sceneAsAudio Scene? @relation("SceneAudio")
+
+  characterRefOf String?
+  character      Character? @relation("CharacterReference", fields: [characterRefOf], references: [id])
+  productRefOf   String?
+  product        Product?   @relation("ProductReference", fields: [productRefOf], references: [id])
+}
+
+model GenerationJob {
+  id          String    @id @default(cuid())
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sceneId     String?
+  type        JobType
+  status      JobStatus @default(QUEUED)
+  provider    String?
+  retryCount  Int       @default(0)
+  maxRetries  Int       @default(3)
+  lastError   String?
+  progressPct Int       @default(0)
+  inputJson   Json?
+  outputJson  Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([projectId, type, status])
+}
+
+model ProviderConfig {
+  id         String             @id @default(cuid())
+  capability ProviderCapability
+  providerId String
+  isPrimary  Boolean            @default(false)
+  isFallback Boolean            @default(false)
+  config     Json?
+  updatedAt  DateTime           @updatedAt
+
+  @@unique([capability, providerId])
+}
+
+model Workflow {
+  id         String   @id
+  name       String
+  configJson Json
+  createdAt  DateTime @default(now())
+}
+
+model Render {
+  id           String    @id @default(cuid())
+  projectId    String
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  status       JobStatus @default(QUEUED)
+  outputKey    String?
+  outputUrl    String?
+  timelineJson Json?
+  errorText    String?
+  createdAt    DateTime  @default(now())
+  finishedAt   DateTime?
+}
+
+model UsageRecord {
+  id            String   @id @default(cuid())
+  provider      String
+  model         String?
+  operation     String
+  projectId     String?
+  estimatedCost Float    @default(0)
+  creditsUsed   Float?
+  durationMs    Int?
+  success       Boolean
+  createdAt     DateTime @default(now())
+}
