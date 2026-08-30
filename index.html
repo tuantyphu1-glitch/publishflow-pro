@@ -431,29 +431,61 @@ select option { background: var(--bg3); }
           <div>
             <div class="form-group">
               <label>Video</label>
-              <label for="video-input" class="upload-zone" id="video-zone"
-                ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
-                ondragleave="this.style.borderColor=''"
-                ondrop="event.preventDefault();handleVideoFile({files:event.dataTransfer.files})"
-                style="display:block;cursor:pointer">
-                <input type="file" id="video-input" accept="video/*" style="display:none" onchange="handleVideoFile(this)">
-                <div class="upload-icon" id="video-icon">🎬</div>
-                <div id="video-text" style="font-size:13px;color:var(--text)">Kéo thả hoặc click để chọn video</div>
-                <div class="upload-hint">MP4, MOV, AVI — tối đa 4GB</div>
-              </label>
+              <div class="schedule-type" style="margin-bottom:8px">
+                <div class="type-btn active" id="video-mode-upload" onclick="setVideoMode('upload')">📁 Tải lên</div>
+                <div class="type-btn" id="video-mode-ai" onclick="setVideoMode('ai')">✨ Tạo bằng AI</div>
+              </div>
+              <div id="video-upload-panel">
+                <label for="video-input" class="upload-zone" id="video-zone"
+                  ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+                  ondragleave="this.style.borderColor=''"
+                  ondrop="event.preventDefault();handleVideoFile({files:event.dataTransfer.files})"
+                  style="display:block;cursor:pointer">
+                  <input type="file" id="video-input" accept="video/*" style="display:none" onchange="handleVideoFile(this)">
+                  <div class="upload-icon" id="video-icon">🎬</div>
+                  <div id="video-text" style="font-size:13px;color:var(--text)">Kéo thả hoặc click để chọn video</div>
+                  <div class="upload-hint">MP4, MOV, AVI — tối đa 4GB</div>
+                </label>
+              </div>
+              <div id="video-ai-panel" style="display:none">
+                <textarea id="video-ai-prompt" placeholder="Mô tả video bạn muốn AI tạo (vd: Cảnh quay drone lướt qua thành phố về đêm, phong cách điện ảnh)..." style="min-height:70px"></textarea>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                  <select id="video-ai-aspect" style="flex:1">
+                    <option value="16:9">16:9 (ngang)</option>
+                    <option value="9:16">9:16 (dọc/Short)</option>
+                  </select>
+                  <button class="btn btn-primary btn-sm" style="flex:1;justify-content:center" onclick="generateVideoAI()">✨ Tạo video</button>
+                </div>
+                <div id="video-ai-status" style="margin-top:10px;font-size:12px;color:var(--text2)"></div>
+                <div id="video-ai-result" style="margin-top:10px"></div>
+                <div class="upload-hint" style="margin-top:6px">Dùng Google Veo qua Gemini API — cần Gemini API key ở Cài đặt API. Tạo video có thể mất 1–3 phút.</div>
+              </div>
             </div>
             <div class="form-group">
               <label>Thumbnail</label>
-              <label for="thumb-input" class="upload-zone" id="thumb-zone"
-                ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
-                ondragleave="this.style.borderColor=''"
-                ondrop="event.preventDefault();handleThumbFile({files:event.dataTransfer.files})"
-                style="display:block;cursor:pointer">
-                <input type="file" id="thumb-input" accept="image/*" style="display:none" onchange="handleThumbFile(this)">
-                <div class="upload-icon" id="thumb-icon">🖼️</div>
-                <div id="thumb-text" style="font-size:13px;color:var(--text)">Kéo thả hoặc click để chọn ảnh</div>
-                <div class="upload-hint">JPG, PNG — 1280×720px hoặc 1080×1920px</div>
-              </label>
+              <div class="schedule-type" style="margin-bottom:8px">
+                <div class="type-btn active" id="thumb-mode-upload" onclick="setThumbMode('upload')">📁 Tải lên</div>
+                <div class="type-btn" id="thumb-mode-ai" onclick="setThumbMode('ai')">✨ Tạo bằng AI</div>
+              </div>
+              <div id="thumb-upload-panel">
+                <label for="thumb-input" class="upload-zone" id="thumb-zone"
+                  ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+                  ondragleave="this.style.borderColor=''"
+                  ondrop="event.preventDefault();handleThumbFile({files:event.dataTransfer.files})"
+                  style="display:block;cursor:pointer">
+                  <input type="file" id="thumb-input" accept="image/*" style="display:none" onchange="handleThumbFile(this)">
+                  <div class="upload-icon" id="thumb-icon">🖼️</div>
+                  <div id="thumb-text" style="font-size:13px;color:var(--text)">Kéo thả hoặc click để chọn ảnh</div>
+                  <div class="upload-hint">JPG, PNG — 1280×720px hoặc 1080×1920px</div>
+                </label>
+              </div>
+              <div id="thumb-ai-panel" style="display:none">
+                <textarea id="thumb-ai-prompt" placeholder="Mô tả ảnh thumbnail bạn muốn AI tạo (vd: Ảnh bìa YouTube về tài chính, chữ nổi bật, màu tương phản cao)..." style="min-height:70px"></textarea>
+                <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%;justify-content:center" onclick="generateThumbAI()">✨ Tạo ảnh</button>
+                <div id="thumb-ai-status" style="margin-top:8px;font-size:12px;color:var(--text2)"></div>
+                <div id="thumb-ai-result" style="margin-top:10px"></div>
+                <div class="upload-hint" style="margin-top:6px">Dùng Gemini (Nano Banana) — cần Gemini API key ở Cài đặt API.</div>
+              </div>
             </div>
           </div>
           <!-- Right -->
@@ -834,6 +866,20 @@ select option { background: var(--bg3); }
         <div>
           <div class="section-title">AI & Tự động hoá</div>
           <div class="card" style="margin-bottom:14px">
+            <div class="card-title">✨ Google AI Studio (Gemini) — Tạo ảnh & video</div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label>Gemini API Key</label>
+              <div class="api-input-wrap">
+                <input type="password" id="gemini-key-input" placeholder="AIza...">
+                <button class="btn btn-secondary btn-sm" onclick="saveGeminiKey()">Lưu</button>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--text2)">
+              Dùng để tạo ảnh thumbnail (Gemini image) và video (Veo) ngay ở Bước 1 khi tạo bài đăng.
+              Lấy key miễn phí tại <a href="#" onclick="event.preventDefault();window.open('https://aistudio.google.com/apikey','_blank')" style="color:var(--accent)">Google AI Studio</a>.
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:14px">
             <div class="card-title">🤖 Claude AI</div>
             <div class="form-group" style="margin-bottom:10px">
               <label>Anthropic API Key</label>
@@ -1096,6 +1142,125 @@ const YT_CLIENT_ID = '810108711372-un07k478hkjs21f3rr8pjncvs9annnou.apps.googleu
 const YT_SCOPES = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.readonly';
 let ytToken = null;
 let ytTokenClient = null;
+
+// ====== Gemini (AI image/video creation) ======
+let geminiKey = localStorage.getItem('gemini_key') || '';
+
+function initGeminiUI() {
+  if (geminiKey) document.getElementById('gemini-key-input').value = geminiKey;
+}
+function saveGeminiKey() {
+  const k = document.getElementById('gemini-key-input').value.trim();
+  if (!k) { toast('⚠️', 'Thiếu API key', 'Nhập Gemini API key trước'); return; }
+  geminiKey = k;
+  localStorage.setItem('gemini_key', k);
+  toast('✅', 'Đã lưu Gemini API key', '');
+}
+
+function setVideoMode(m) {
+  document.getElementById('video-mode-upload').classList.toggle('active', m === 'upload');
+  document.getElementById('video-mode-ai').classList.toggle('active', m === 'ai');
+  document.getElementById('video-upload-panel').style.display = m === 'upload' ? 'block' : 'none';
+  document.getElementById('video-ai-panel').style.display = m === 'ai' ? 'block' : 'none';
+}
+function setThumbMode(m) {
+  document.getElementById('thumb-mode-upload').classList.toggle('active', m === 'upload');
+  document.getElementById('thumb-mode-ai').classList.toggle('active', m === 'ai');
+  document.getElementById('thumb-upload-panel').style.display = m === 'upload' ? 'block' : 'none';
+  document.getElementById('thumb-ai-panel').style.display = m === 'ai' ? 'block' : 'none';
+}
+
+function base64ToBlob(b64, mime) {
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
+async function generateThumbAI() {
+  if (!geminiKey) { toast('⚠️', 'Chưa có Gemini API key', 'Vào Cài đặt API để nhập key'); return; }
+  const prompt = document.getElementById('thumb-ai-prompt').value.trim();
+  if (!prompt) { toast('⚠️', 'Thiếu mô tả', 'Nhập mô tả ảnh muốn tạo'); return; }
+  const statusEl = document.getElementById('thumb-ai-status');
+  const resultEl = document.getElementById('thumb-ai-result');
+  resultEl.innerHTML = '';
+  statusEl.innerHTML = '<div class="spinner" style="display:inline-block;width:14px;height:14px;vertical-align:middle;margin-right:6px"></div>Đang tạo ảnh...';
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${encodeURIComponent(geminiKey)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || `Lỗi API (${res.status})`);
+    const part = data.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+    if (!part) throw new Error('AI không trả về ảnh nào — thử mô tả khác');
+    const mime = part.inlineData.mimeType || 'image/png';
+    const blob = base64ToBlob(part.inlineData.data, mime);
+    thumbFile = new File([blob], 'ai-thumbnail.png', { type: mime });
+    if (thumbURL) URL.revokeObjectURL(thumbURL);
+    thumbURL = URL.createObjectURL(blob);
+    resultEl.innerHTML = `<img src="${thumbURL}" style="width:100%;border-radius:8px">`;
+    statusEl.textContent = '✅ Đã tạo xong — sẽ dùng ảnh này làm thumbnail';
+    toast('✅', 'Đã tạo ảnh bằng AI', '');
+  } catch (e) {
+    statusEl.innerHTML = `<span style="color:var(--red)">❌ ${e.message}</span>`;
+    toast('❌', 'Lỗi tạo ảnh', e.message);
+  }
+}
+
+async function generateVideoAI() {
+  if (!geminiKey) { toast('⚠️', 'Chưa có Gemini API key', 'Vào Cài đặt API để nhập key'); return; }
+  const prompt = document.getElementById('video-ai-prompt').value.trim();
+  if (!prompt) { toast('⚠️', 'Thiếu mô tả', 'Nhập mô tả video muốn tạo'); return; }
+  const aspect = document.getElementById('video-ai-aspect').value;
+  const statusEl = document.getElementById('video-ai-status');
+  const resultEl = document.getElementById('video-ai-result');
+  resultEl.innerHTML = '';
+  statusEl.innerHTML = '<div class="spinner" style="display:inline-block;width:14px;height:14px;vertical-align:middle;margin-right:6px"></div>Đang gửi yêu cầu tới Veo...';
+  try {
+    const startRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/veo-3.0-generate-001:predictLongRunning?key=${encodeURIComponent(geminiKey)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ instances: [{ prompt }], parameters: { aspectRatio: aspect } })
+    });
+    const startData = await startRes.json();
+    if (!startRes.ok) throw new Error(startData.error?.message || `Lỗi khởi tạo Veo (${startRes.status})`);
+    const opName = startData.name;
+    if (!opName) throw new Error('Không nhận được operation từ Veo');
+
+    let opData = null, tries = 0;
+    while (tries < 30) {
+      await new Promise(r => setTimeout(r, 10000));
+      tries++;
+      statusEl.innerHTML = `<div class="spinner" style="display:inline-block;width:14px;height:14px;vertical-align:middle;margin-right:6px"></div>Đang tạo video... (${tries * 10}s)`;
+      const pollRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/${opName}?key=${encodeURIComponent(geminiKey)}`);
+      opData = await pollRes.json();
+      if (!pollRes.ok) throw new Error(opData.error?.message || `Lỗi kiểm tra trạng thái (${pollRes.status})`);
+      if (opData.done) break;
+    }
+    if (!opData || !opData.done) throw new Error('Quá thời gian chờ (5 phút) — Veo vẫn đang xử lý, thử lại sau');
+    if (opData.error) throw new Error(opData.error.message || 'Veo báo lỗi khi tạo video');
+
+    const sample = opData.response?.generateVideoResponse?.generatedSamples?.[0] || opData.response?.videos?.[0];
+    const fileUri = sample?.video?.uri || sample?.uri;
+    if (!fileUri) throw new Error('Không tìm thấy video trong kết quả trả về');
+
+    statusEl.textContent = 'Đang tải video về...';
+    const sep = fileUri.includes('?') ? '&' : '?';
+    const videoRes = await fetch(fileUri + sep + 'key=' + encodeURIComponent(geminiKey));
+    if (!videoRes.ok) throw new Error(`Không tải được file video (${videoRes.status})`);
+    const blob = await videoRes.blob();
+    videoFile = new File([blob], 'ai-video.mp4', { type: 'video/mp4' });
+    const url = URL.createObjectURL(blob);
+    resultEl.innerHTML = `<video src="${url}" controls style="width:100%;border-radius:8px;max-height:240px"></video>`;
+    statusEl.textContent = '✅ Đã tạo xong — sẽ dùng video này khi đăng';
+    toast('✅', 'Đã tạo video bằng AI', '');
+  } catch (e) {
+    statusEl.innerHTML = `<span style="color:var(--red)">❌ ${e.message}</span>`;
+    toast('❌', 'Lỗi tạo video', e.message);
+  }
+}
 
 // ====== Facebook ======
 let fbToken = localStorage.getItem('fb_token') || null;
@@ -1517,8 +1682,8 @@ function toast(icon, title, msg) {
 renderSchedule();
 renderLibrary();
 renderAnalytics();
-document.addEventListener('DOMContentLoaded', initFacebookUI);
-if (document.readyState !== 'loading') initFacebookUI();
+document.addEventListener('DOMContentLoaded', () => { initFacebookUI(); initGeminiUI(); });
+if (document.readyState !== 'loading') { initFacebookUI(); initGeminiUI(); }
 </script>
 </body>
 </html>
