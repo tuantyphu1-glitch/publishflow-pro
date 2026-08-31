@@ -11,7 +11,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const project = await db.project.findUnique({
     where: { id },
     include: {
-      scenes: { orderBy: { index: 'asc' }, include: { imageAsset: true, videoAsset: true } },
+      scenes: { orderBy: { index: 'asc' }, include: { imageAsset: true, videoAsset: true, audioAsset: true } },
+      renders: { orderBy: { createdAt: 'desc' }, take: 1 },
     },
   });
   if (!project) notFound();
@@ -42,7 +43,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       videoAsset: s.videoAsset
         ? { id: s.videoAsset.id, url: s.videoAsset.url, provider: s.videoAsset.provider, model: s.videoAsset.model, durationSeconds: s.videoAsset.durationSeconds }
         : null,
+      audioAsset: s.audioAsset
+        ? { id: s.audioAsset.id, url: s.audioAsset.url, provider: s.audioAsset.provider, model: s.audioAsset.model, durationSeconds: s.audioAsset.durationSeconds }
+        : null,
     })),
+    latestRender: project.renders[0]
+      ? { id: project.renders[0].id, status: project.renders[0].status, outputUrl: project.renders[0].outputUrl, errorText: project.renders[0].errorText }
+      : null,
   };
 
   return <ProjectWorkspace initialProject={dto} />;

@@ -17,19 +17,24 @@ export function SceneCard({
   scene,
   latestImageJob,
   latestVideoJob,
+  latestVoiceJob,
   onRegenerateImage,
   onRegenerateVideo,
+  onRegenerateVoice,
   busy,
 }: {
   scene: SceneDTO;
   latestImageJob?: GenerationJobDTO;
   latestVideoJob?: GenerationJobDTO;
+  latestVoiceJob?: GenerationJobDTO;
   onRegenerateImage: () => void;
   onRegenerateVideo: () => void;
+  onRegenerateVoice: () => void;
   busy: boolean;
 }) {
   const imagePending = latestImageJob && ['QUEUED', 'PROCESSING'].includes(latestImageJob.status);
   const videoPending = latestVideoJob && ['QUEUED', 'PROCESSING'].includes(latestVideoJob.status);
+  const voicePending = latestVoiceJob && ['QUEUED', 'PROCESSING'].includes(latestVoiceJob.status);
 
   return (
     <div className="border border-neutral-800 rounded-xl p-4 bg-neutral-900/50">
@@ -43,7 +48,7 @@ export function SceneCard({
       <p className="text-sm text-neutral-200 mb-3">{scene.voiceover}</p>
       <p className="text-xs text-neutral-500 mb-4">{scene.visualDescription}</p>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <div>
           <div className="aspect-[9/16] max-h-56 bg-neutral-950 border border-neutral-800 rounded-lg overflow-hidden flex items-center justify-center">
             {scene.imageAsset ? (
@@ -88,6 +93,26 @@ export function SceneCard({
           </button>
           {latestVideoJob?.status === 'FAILED' && (
             <p className="mt-1 text-[11px] text-red-400">{latestVideoJob.lastError}</p>
+          )}
+        </div>
+
+        <div>
+          <div className="aspect-[9/16] max-h-56 bg-neutral-950 border border-neutral-800 rounded-lg overflow-hidden flex items-center justify-center p-2">
+            {scene.audioAsset ? (
+              <audio src={scene.audioAsset.url} controls className="w-full" />
+            ) : (
+              <span className="text-[11px] text-neutral-600 text-center px-2">{voicePending ? 'Generating…' : 'No voiceover yet'}</span>
+            )}
+          </div>
+          <button
+            className="mt-2 w-full text-xs bg-neutral-800 hover:bg-neutral-700 disabled:opacity-40 text-neutral-200 rounded-lg py-1.5"
+            onClick={onRegenerateVoice}
+            disabled={busy || voicePending}
+          >
+            {voicePending ? 'Generating…' : scene.audioAsset ? 'Regenerate voice' : 'Generate voice'}
+          </button>
+          {latestVoiceJob?.status === 'FAILED' && (
+            <p className="mt-1 text-[11px] text-red-400">{latestVoiceJob.lastError}</p>
           )}
         </div>
       </div>

@@ -10,6 +10,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       scenes: { orderBy: { index: 'asc' }, include: { imageAsset: true, videoAsset: true, audioAsset: true } },
       characters: { include: { character: { include: { referenceImages: true } } } },
       products: { include: { product: { include: { referenceImages: true } } } },
+      renders: { orderBy: { createdAt: 'desc' }, take: 1 },
     },
   });
   if (!project) {
@@ -20,6 +21,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     scenes: project.scenes,
     characters: project.characters.map((pc) => pc.character),
     products: project.products.map((pp) => pp.product),
+    latestRender: project.renders[0] ?? null,
   });
 }
 

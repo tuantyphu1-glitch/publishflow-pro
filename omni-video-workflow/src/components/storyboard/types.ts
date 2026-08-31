@@ -19,6 +19,14 @@ export interface SceneDTO {
   status: string;
   imageAsset: AssetDTO | null;
   videoAsset: AssetDTO | null;
+  audioAsset: AssetDTO | null;
+}
+
+export interface RenderDTO {
+  id: string;
+  status: 'QUEUED' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+  outputUrl: string | null;
+  errorText: string | null;
 }
 
 export interface ProjectDTO {
@@ -31,6 +39,7 @@ export interface ProjectDTO {
   script: string;
   status: string;
   scenes: SceneDTO[];
+  latestRender: RenderDTO | null;
 }
 
 export interface GenerationJobDTO {
