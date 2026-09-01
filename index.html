@@ -353,6 +353,42 @@ select option { background: var(--bg3); }
 .freq-label { font-size: 13px; color: var(--text); }
 .freq-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
 .freq-input { width: 80px; }
+
+/* AI Chat */
+.page.chat-page { display: none; flex-direction: column; height: 100vh; padding: 0; }
+.page.chat-page.active { display: flex; }
+.chat-toolbar { display: flex; align-items: center; gap: 12px; padding: 14px 32px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.chat-conn { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+.chat-conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+.chat-conn-dot.on { background: var(--green); }
+.chat-conn-dot.checking { background: var(--amber); }
+.chat-settings-panel { padding: 16px 32px; border-bottom: 1px solid var(--border); background: var(--bg2); display: none; flex-shrink: 0; }
+.chat-settings-panel.open { display: block; }
+.chat-settings-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+.chat-body { flex: 1; overflow-y: auto; padding: 24px 32px; }
+.chat-msg-row { display: flex; gap: 12px; margin-bottom: 20px; max-width: 760px; }
+.chat-msg-row.user { margin-left: auto; flex-direction: row-reverse; }
+.chat-msg-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; background: var(--bg3); }
+.chat-msg-row.assistant .chat-msg-avatar { background: var(--accent-bg); }
+.chat-msg-bubble { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 13px; line-height: 1.6; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+.chat-msg-row.user .chat-msg-bubble { background: var(--accent); border-color: var(--accent); color: #fff; }
+.chat-msg-bubble code { background: rgba(0,0,0,0.25); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+.chat-msg-bubble pre { background: rgba(0,0,0,0.25); padding: 10px; border-radius: 6px; overflow-x: auto; margin: 6px 0; }
+.chat-msg-bubble pre code { background: none; padding: 0; }
+.chat-msg-meta { font-size: 10px; color: var(--text2); margin-top: 4px; }
+.chat-typing { display: inline-flex; gap: 3px; }
+.chat-typing span { width: 5px; height: 5px; border-radius: 50%; background: var(--text2); animation: chatTyping 1s infinite ease-in-out; }
+.chat-typing span:nth-child(2) { animation-delay: 0.15s; }
+.chat-typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes chatTyping { 0%, 60%, 100% { opacity: 0.3; } 30% { opacity: 1; } }
+.chat-input-bar { flex-shrink: 0; padding: 16px 32px 24px; border-top: 1px solid var(--border); }
+.chat-input-wrap { display: flex; gap: 10px; align-items: flex-end; background: var(--bg3); border: 1px solid var(--border2); border-radius: 12px; padding: 10px 10px 10px 16px; }
+.chat-input-wrap textarea { background: transparent; border: none; padding: 6px 0; min-height: 22px; max-height: 160px; flex: 1; }
+.chat-input-wrap textarea:focus { border: none; }
+.chat-send-btn { width: 36px; height: 36px; border-radius: 9px; background: var(--accent); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+.chat-send-btn:hover { background: var(--accent2); }
+.chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.chat-hint { font-size: 11px; color: var(--text2); margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -377,6 +413,8 @@ select option { background: var(--bg3); }
       <div class="nav-section">Quản lý</div>
       <div class="nav-item" onclick="showPage('library')"><span class="nav-icon">🗂️</span> Thư viện</div>
       <div class="nav-item" onclick="showPage('analytics')"><span class="nav-icon">📊</span> Analytics</div>
+      <div class="nav-section">Trợ lý AI</div>
+      <div class="nav-item" onclick="showPage('aichat')"><span class="nav-icon">🤖</span> TVT AI Chat <span class="nav-badge" id="aichat-status-dot" style="background:var(--red);width:8px;height:8px;padding:0;border-radius:50%"></span></div>
       <div class="nav-section">Hệ thống</div>
       <div class="nav-item" onclick="showPage('settings')"><span class="nav-icon">⚙️</span> Cài đặt API</div>
     </nav>
@@ -875,6 +913,60 @@ select option { background: var(--bg3); }
       </div>
     </div>
 
+    <!-- ===== AI CHAT PAGE ===== -->
+    <div class="page chat-page" id="page-aichat">
+      <div class="chat-toolbar">
+        <div>
+          <div class="page-title" style="font-size:16px">🤖 TVT AI Chat</div>
+          <div class="page-sub" style="margin-top:2px">Trò chuyện với AI chạy local trên máy (qua Ollama)</div>
+        </div>
+        <div class="chat-conn" id="chat-conn-label" style="margin-left:auto">
+          <span class="chat-conn-dot" id="chat-conn-dot"></span> Đang kiểm tra kết nối...
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="toggleAiSettings()">⚙️ Cài đặt</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearAiChat()">🗑️ Xoá hội thoại</button>
+      </div>
+
+      <div class="chat-settings-panel" id="chat-settings-panel">
+        <div class="chat-settings-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label>Địa chỉ Ollama server</label>
+            <input type="text" id="ai-server-input" placeholder="http://localhost:11434">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>Model</label>
+            <select id="ai-model-select"><option value="">— Chọn model —</option></select>
+          </div>
+          <button class="btn btn-primary" onclick="saveAiSettings()">Lưu & kết nối lại</button>
+        </div>
+        <div class="chat-hint">
+          Cần chạy Ollama trên máy trước: <code style="background:var(--bg4);padding:2px 6px;border-radius:4px">ollama serve</code> rồi <code style="background:var(--bg4);padding:2px 6px;border-radius:4px">ollama pull llama3</code>.
+          Nếu báo lỗi kết nối/CORS, chạy Ollama với <code style="background:var(--bg4);padding:2px 6px;border-radius:4px">OLLAMA_ORIGINS=*</code>.
+        </div>
+      </div>
+
+      <div class="chat-body" id="chat-body">
+        <div class="empty-state" id="chat-empty-state">
+          <div class="empty-icon">🤖</div>
+          <div class="empty-title">Bắt đầu trò chuyện với TVT AI</div>
+          <div class="empty-desc">AI chạy hoàn toàn local trên máy anh qua Ollama — 0đ API, 0 byte lọt ra ngoài Internet.</div>
+          <div style="display:flex;flex-direction:column;gap:8px;max-width:360px;margin:0 auto">
+            <button class="btn btn-secondary" style="justify-content:flex-start" onclick="useSuggestedPrompt(this)">💡 Tóm tắt nội dung này giúp tôi</button>
+            <button class="btn btn-secondary" style="justify-content:flex-start" onclick="useSuggestedPrompt(this)">✍️ Viết caption TikTok về tài chính cá nhân</button>
+            <button class="btn btn-secondary" style="justify-content:flex-start" onclick="useSuggestedPrompt(this)">💻 Cho tôi đoạn code ví dụ về sticky header</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input-bar">
+        <div class="chat-input-wrap">
+          <textarea id="chat-input" rows="1" placeholder="Nhắn gì đó cho TVT AI..." onkeydown="handleChatKeydown(event)" oninput="autoGrowChatInput(this)"></textarea>
+          <button class="chat-send-btn" id="chat-send-btn" onclick="sendAiChatMessage()">➤</button>
+        </div>
+        <div class="chat-hint">Enter để gửi · Shift+Enter xuống dòng</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -904,6 +996,7 @@ function showPage(id) {
   if (id === 'analytics') renderAnalytics();
   if (id === 'library') renderLibrary();
   if (id === 'schedule') renderSchedule();
+  if (id === 'aichat') initAiChat();
 }
 
 // ====== Tags ======
@@ -1511,6 +1604,197 @@ function toast(icon, title, msg) {
   document.getElementById('toast-msg').textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ====== TVT AI Chat (local, via Ollama) ======
+let aiChatConfig = {
+  server: localStorage.getItem('ai_server') || 'http://localhost:11434',
+  model: localStorage.getItem('ai_model') || ''
+};
+let aiChatMessages = JSON.parse(localStorage.getItem('ai_chat_history') || '[]');
+let aiChatBusy = false;
+
+function initAiChat() {
+  document.getElementById('ai-server-input').value = aiChatConfig.server;
+  renderAiChatMessages();
+  checkOllamaConnection();
+}
+
+function toggleAiSettings() {
+  document.getElementById('chat-settings-panel').classList.toggle('open');
+}
+
+function setChatConnStatus(state, label) {
+  const dot = document.getElementById('chat-conn-dot');
+  const navDot = document.getElementById('aichat-status-dot');
+  const wrap = document.getElementById('chat-conn-label');
+  dot.className = 'chat-conn-dot' + (state === 'on' ? ' on' : state === 'checking' ? ' checking' : '');
+  wrap.lastChild.textContent = ' ' + label;
+  navDot.style.background = state === 'on' ? 'var(--green)' : state === 'checking' ? 'var(--amber)' : 'var(--red)';
+}
+
+async function checkOllamaConnection() {
+  setChatConnStatus('checking', 'Đang kiểm tra kết nối...');
+  try {
+    const res = await fetch(aiChatConfig.server.replace(/\/$/, '') + '/api/tags');
+    if (!res.ok) throw new Error('bad status');
+    const data = await res.json();
+    const models = (data.models || []).map(m => m.name);
+    const select = document.getElementById('ai-model-select');
+    select.innerHTML = '<option value="">— Chọn model —</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
+    if (models.includes(aiChatConfig.model)) {
+      select.value = aiChatConfig.model;
+    } else if (models.length) {
+      aiChatConfig.model = models[0];
+      select.value = models[0];
+      localStorage.setItem('ai_model', aiChatConfig.model);
+    }
+    setChatConnStatus('on', models.length ? `Đã kết nối · ${models.length} model` : 'Đã kết nối · chưa có model nào');
+  } catch (e) {
+    setChatConnStatus('off', 'Không kết nối được Ollama');
+  }
+}
+
+function saveAiSettings() {
+  const server = document.getElementById('ai-server-input').value.trim() || 'http://localhost:11434';
+  const model = document.getElementById('ai-model-select').value;
+  aiChatConfig.server = server;
+  aiChatConfig.model = model;
+  localStorage.setItem('ai_server', server);
+  localStorage.setItem('ai_model', model);
+  checkOllamaConnection();
+  toast('✅', 'Đã lưu cài đặt', 'Đang kết nối lại tới Ollama...');
+}
+
+function autoGrowChatInput(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+}
+
+function useSuggestedPrompt(btn) {
+  const text = btn.textContent.replace(/^\S+\s/, '');
+  const input = document.getElementById('chat-input');
+  input.value = text;
+  autoGrowChatInput(input);
+  sendAiChatMessage();
+}
+
+function handleChatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendAiChatMessage();
+  }
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function formatChatContent(text) {
+  let html = escapeHtml(text);
+  html = html.replace(/```([\s\S]*?)```/g, (m, code) => `<pre><code>${code.trim()}</code></pre>`);
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  return html;
+}
+
+function renderAiChatMessages() {
+  const body = document.getElementById('chat-body');
+  const empty = document.getElementById('chat-empty-state');
+  if (!aiChatMessages.length) {
+    body.innerHTML = '';
+    body.appendChild(empty);
+    return;
+  }
+  body.innerHTML = aiChatMessages.map((m, i) => `
+    <div class="chat-msg-row ${m.role}">
+      <div class="chat-msg-avatar">${m.role === 'user' ? '🧑' : '🤖'}</div>
+      <div>
+        <div class="chat-msg-bubble" id="chat-msg-${i}">${formatChatContent(m.content)}</div>
+      </div>
+    </div>
+  `).join('');
+  body.scrollTop = body.scrollHeight;
+}
+
+function saveAiChatHistory() {
+  localStorage.setItem('ai_chat_history', JSON.stringify(aiChatMessages));
+}
+
+function clearAiChat() {
+  if (!aiChatMessages.length) return;
+  if (!confirm('Xoá toàn bộ lịch sử trò chuyện?')) return;
+  aiChatMessages = [];
+  saveAiChatHistory();
+  renderAiChatMessages();
+}
+
+async function sendAiChatMessage() {
+  if (aiChatBusy) return;
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  if (!aiChatConfig.model) {
+    toast('⚠️', 'Chưa chọn model', 'Mở Cài đặt để chọn model Ollama trước khi chat.');
+    return;
+  }
+
+  aiChatMessages.push({ role: 'user', content: text });
+  input.value = '';
+  autoGrowChatInput(input);
+  aiChatMessages.push({ role: 'assistant', content: '' });
+  renderAiChatMessages();
+  saveAiChatHistory();
+
+  aiChatBusy = true;
+  document.getElementById('chat-send-btn').disabled = true;
+  const assistantIdx = aiChatMessages.length - 1;
+  const bubble = document.getElementById('chat-msg-' + assistantIdx);
+  bubble.innerHTML = '<span class="chat-typing"><span></span><span></span><span></span></span>';
+
+  try {
+    const res = await fetch(aiChatConfig.server.replace(/\/$/, '') + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: aiChatConfig.model,
+        messages: aiChatMessages.slice(0, -1).map(m => ({ role: m.role, content: m.content })),
+        stream: true
+      })
+    });
+    if (!res.ok || !res.body) throw new Error('request failed');
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullText = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const chunk = JSON.parse(line);
+        if (chunk.message && chunk.message.content) {
+          fullText += chunk.message.content;
+          aiChatMessages[assistantIdx].content = fullText;
+          bubble.innerHTML = formatChatContent(fullText);
+          document.getElementById('chat-body').scrollTop = document.getElementById('chat-body').scrollHeight;
+        }
+      }
+    }
+    if (!fullText) bubble.innerHTML = '<span style="color:var(--text2)">(Không có phản hồi)</span>';
+    saveAiChatHistory();
+  } catch (e) {
+    aiChatMessages[assistantIdx].content = '⚠️ Không kết nối được tới Ollama tại ' + aiChatConfig.server + '. Kiểm tra Ollama đã chạy chưa (ollama serve).';
+    bubble.innerHTML = formatChatContent(aiChatMessages[assistantIdx].content);
+    saveAiChatHistory();
+    setChatConnStatus('off', 'Mất kết nối tới Ollama');
+  } finally {
+    aiChatBusy = false;
+    document.getElementById('chat-send-btn').disabled = false;
+  }
 }
 
 // ====== Init ======
