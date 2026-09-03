@@ -480,6 +480,15 @@ select option { background: var(--bg3); }
               </div>
             </div>
             <div class="form-group">
+              <label>Ngôn ngữ nội dung (đa ngôn ngữ)</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap" id="lang-select">
+                <div class="filter-btn active" onclick="toggleLanguage(this,'vi')">🇻🇳 Tiếng Việt</div>
+                <div class="filter-btn" onclick="toggleLanguage(this,'en')">🇬🇧 English</div>
+                <div class="filter-btn" onclick="toggleLanguage(this,'pl')">🇵🇱 Polski</div>
+              </div>
+              <div style="margin-top:6px;font-size:11px;color:var(--text2)">Chọn nhiều ngôn ngữ để AI tạo tiêu đề, mô tả, hashtag riêng cho từng ngôn ngữ</div>
+            </div>
+            <div class="form-group">
               <label>Đăng lên nền tảng</label>
               <div class="platform-toggle selected" id="pl-yt" onclick="togglePlatform('yt')">
                 <div class="platform-info"><div class="platform-logo pl-yt">▶</div><div><div class="platform-name">YouTube</div><div class="platform-type">Long-form & Shorts</div></div></div>
@@ -506,7 +515,8 @@ select option { background: var(--bg3); }
       <!-- Step 2: AI -->
       <div id="pane-2" style="display:none">
         <div class="card" style="margin-bottom:20px">
-          <div class="card-title">🤖 AI tối ưu nội dung cho từng nền tảng</div>
+          <div class="card-title">🤖 AI tối ưu nội dung đa ngôn ngữ cho từng nền tảng</div>
+          <div class="tabs" id="ai-lang-tabs" style="display:none"></div>
           <div id="ai-loading" style="text-align:center;padding:30px;display:none">
             <div class="spinner" style="margin:0 auto 12px"></div>
             <div style="color:var(--text2);font-size:13px">Đang phân tích và tối ưu nội dung...</div>
@@ -515,7 +525,7 @@ select option { background: var(--bg3); }
           <div id="ai-results"></div>
           <div id="ai-start" style="text-align:center;padding:20px">
             <div style="font-size:32px;margin-bottom:10px">✨</div>
-            <div style="font-size:14px;color:var(--text2);margin-bottom:16px">AI sẽ tạo tiêu đề, mô tả và hashtag tối ưu<br>riêng cho từng nền tảng</div>
+            <div style="font-size:14px;color:var(--text2);margin-bottom:16px">AI sẽ tạo tiêu đề, mô tả và hashtag tối ưu<br>riêng cho từng nền tảng và từng ngôn ngữ đã chọn</div>
             <button class="btn btn-primary" onclick="runAI()">Chạy AI tối ưu</button>
           </div>
         </div>
@@ -527,6 +537,7 @@ select option { background: var(--bg3); }
 
       <!-- Step 3: Preview -->
       <div id="pane-3" style="display:none">
+        <div class="tabs" id="preview-lang-tabs" style="display:none"></div>
         <div class="tabs">
           <div class="tab active" onclick="switchPreview(this,'yt')">▶ YouTube</div>
           <div class="tab" onclick="switchPreview(this,'tt')">TikTok</div>
@@ -848,7 +859,7 @@ select option { background: var(--bg3); }
             </div>
             <div class="form-group" style="margin-bottom:0">
               <label>Ngôn ngữ tối ưu mặc định</label>
-              <select><option selected>Tiếng Việt</option><option>English</option><option>Cả hai</option></select>
+              <select><option selected>Tiếng Việt</option><option>English</option><option>Polski</option><option>Tất cả</option></select>
             </div>
           </div>
 
@@ -894,6 +905,11 @@ let currentStep = 1;
 let libFilter = 'all';
 let libSearch = '';
 let bulkFiles = [];
+let languages = { vi: true, en: false, pl: false };
+let currentLang = 'vi';
+let currentPreviewPl = 'yt';
+let aiDataAll = {};
+const LANG_LABELS = { vi: '🇻🇳 Tiếng Việt', en: '🇬🇧 English', pl: '🇵🇱 Polski' };
 
 // ====== Navigation ======
 function showPage(id) {
@@ -934,6 +950,14 @@ function renderTags() {
   wrap.appendChild(inp);
 }
 function removeTag(t) { tags = tags.filter(x => x !== t); renderTags(); }
+
+// ====== Languages ======
+function toggleLanguage(el, code) {
+  const activeCount = Object.values(languages).filter(Boolean).length;
+  if (languages[code] && activeCount === 1) { toast('⚠️', 'Cần ít nhất 1 ngôn ngữ', 'Chọn thêm ngôn ngữ khác trước khi bỏ chọn cái này'); return; }
+  languages[code] = !languages[code];
+  el.classList.toggle('active', languages[code]);
+}
 
 // ====== Upload ======
 let videoFile = null, thumbFile = null, thumbURL = null;
@@ -998,11 +1022,71 @@ function goStep(n) {
     }
   }
   currentStep = n;
-  if (n === 3) renderPreview('yt');
+  if (n === 3) { renderLangTabs('preview-lang-tabs'); renderPreview(currentPreviewPl); }
   if (n === 4) renderPublishStatus();
 }
 
 // ====== AI ======
+function buildContent(lang, title, epNum) {
+  const T = {
+    vi: {
+      yt: { name: 'YouTube', icon: '▶', color: '#ff0000',
+        title: `${title} | Tư Duy Tài Chính #${epNum}`,
+        desc: `🔥 Trong video này chúng ta sẽ khám phá tại sao các chiếc bẫy tiêu dùng luôn khiến bạn hết tiền cuối tháng...\n\n⏱️ Timestamps:\n00:00 Giới thiệu\n02:30 Bẫy tiêu dùng số 1\n08:15 Luật 24 giờ\n15:40 Giải pháp thực tế\n\n👇 Subscribe để không bỏ lỡ!`,
+        tags: ['tuduytaichinh', 'quanlytien', 'taichinh', 'TVTTuDuy', 'tikhiem', 'dautu'] },
+      tt: { name: 'TikTok', icon: 'T', color: '#69c9d0',
+        title: `Tại sao bạn LUÔN hết tiền cuối tháng? 🤔💸`,
+        desc: `Bẫy tiêu dùng nguy hiểm nhất mà ai cũng mắc phải!\nXem đến cuối nhé 👇`,
+        tags: ['tikhiem', 'taichinh', 'tuduytaichinh', 'fyp', 'viral', 'moneyadvice', 'TVT'] },
+      fb: { name: 'Facebook', icon: 'f', color: '#1877f2',
+        title: `${title}`,
+        desc: `💡 Bạn có biết tại sao dù cố gắng tiết kiệm nhưng tài khoản vẫn về 0 cuối tháng?\n\nTrong video hôm nay mình chia sẻ 5 bẫy tiêu dùng cực kỳ nguy hiểm và cách thoát ra...\n\n👉 Xem video và để lại bình luận bạn đang mắc phải bẫy nào nhé!\n#TVTTuDuy #TaiChinh #TuDuy`,
+        tags: ['TVTTuDuy', 'TaiChinh', 'TuDuy', 'QuanLyTien'] },
+      ig: { name: 'Instagram', icon: '📸', color: '#e1306c',
+        title: `Bẫy tiêu dùng 💸`,
+        desc: `Tại sao bạn LUÔN hết tiền? 🤔\nXem video đầy đủ trên YouTube!\n.\n.\n.\n#tikhiem #taichinh #tuduytaichinh #quanlytien #dautu #money #moneyadvice #viral #fyp #trending #TVTTuDuy #vietnam #lifestyle #success #mindset`,
+        tags: Array.from({length: 25}, (_,i) => ['tikhiem','taichinh','tuduytaichinh','quanlytien','dautu','money','moneyadvice','viral','fyp','trending','TVTTuDuy','vietnam','lifestyle','success','mindset','richlife','financialfreedom','savemoney','budget','investing','growth','motivate','dailylife','contentcreator','reels'][i]) }
+    },
+    en: {
+      yt: { name: 'YouTube', icon: '▶', color: '#ff0000',
+        title: `${title} | Personal Finance Tips #${epNum}`,
+        desc: `🔥 In this video we explore why spending traps always leave you broke by the end of the month...\n\n⏱️ Timestamps:\n00:00 Intro\n02:30 Spending Trap #1\n08:15 The 24-Hour Rule\n15:40 Practical Solutions\n\n👇 Subscribe so you don't miss the next one!`,
+        tags: ['personalfinance', 'moneytips', 'budgeting', 'financialfreedom', 'saving', 'investing'] },
+      tt: { name: 'TikTok', icon: 'T', color: '#69c9d0',
+        title: `Why do you ALWAYS run out of money by month's end? 🤔💸`,
+        desc: `The most dangerous spending trap almost everyone falls for!\nWatch till the end 👇`,
+        tags: ['savemoney', 'finance', 'personalfinance', 'fyp', 'viral', 'moneyadvice'] },
+      fb: { name: 'Facebook', icon: 'f', color: '#1877f2',
+        title: `${title}`,
+        desc: `💡 Ever wonder why your account still hits zero even when you try to save?\n\nIn today's video I break down 5 dangerous spending traps and how to escape them...\n\n👉 Watch and comment which trap you fall into!\n#PersonalFinance #MoneyTips #Mindset`,
+        tags: ['PersonalFinance', 'MoneyTips', 'Mindset', 'Budgeting'] },
+      ig: { name: 'Instagram', icon: '📸', color: '#e1306c',
+        title: `Spending traps 💸`,
+        desc: `Why do you ALWAYS run out of money? 🤔\nWatch the full video on YouTube!\n.\n.\n.\n#savemoney #personalfinance #moneytips #budgeting #investing #money #moneyadvice #viral #fyp #trending #mindset #success`,
+        tags: Array.from({length: 25}, (_,i) => ['savemoney','personalfinance','moneytips','budgeting','investing','money','moneyadvice','viral','fyp','trending','mindset','success','richlife','financialfreedom','saving','budget','growth','motivate','dailylife','contentcreator','reels','finance','wealth','sidehustle','entrepreneur'][i]) }
+    },
+    pl: {
+      yt: { name: 'YouTube', icon: '▶', color: '#ff0000',
+        title: `${title} | Finanse Osobiste #${epNum}`,
+        desc: `🔥 W tym filmie odkryjemy, dlaczego pułapki konsumpcyjne zawsze sprawiają, że pod koniec miesiąca brakuje Ci pieniędzy...\n\n⏱️ Znaczniki czasu:\n00:00 Wprowadzenie\n02:30 Pułapka konsumpcyjna nr 1\n08:15 Zasada 24 godzin\n15:40 Praktyczne rozwiązania\n\n👇 Zasubskrybuj, aby nie przegapić kolejnego filmu!`,
+        tags: ['finanseosobiste', 'oszczedzanie', 'budzet', 'wolnoscfinansowa', 'inwestowanie'] },
+      tt: { name: 'TikTok', icon: 'T', color: '#69c9d0',
+        title: `Dlaczego ZAWSZE brakuje Ci pieniędzy pod koniec miesiąca? 🤔💸`,
+        desc: `Najbardziej niebezpieczna pułapka konsumpcyjna, w którą wpada prawie każdy!\nOglądaj do końca 👇`,
+        tags: ['oszczedzanie', 'finanse', 'finanseosobiste', 'fyp', 'viral', 'poradyfinansowe'] },
+      fb: { name: 'Facebook', icon: 'f', color: '#1877f2',
+        title: `${title}`,
+        desc: `💡 Zastanawiasz się, dlaczego mimo prób oszczędzania konto i tak wynosi zero pod koniec miesiąca?\n\nW dzisiejszym filmie omawiam 5 niebezpiecznych pułapek konsumpcyjnych i jak z nich wyjść...\n\n👉 Obejrzyj i napisz w komentarzu, w którą pułapkę wpadasz!\n#FinanseOsobiste #PoradyFinansowe #Mindset`,
+        tags: ['FinanseOsobiste', 'PoradyFinansowe', 'Mindset', 'Budzet'] },
+      ig: { name: 'Instagram', icon: '📸', color: '#e1306c',
+        title: `Pułapki konsumpcyjne 💸`,
+        desc: `Dlaczego ZAWSZE brakuje Ci pieniędzy? 🤔\nObejrzyj pełny film na YouTube!\n.\n.\n.\n#oszczedzanie #finanseosobiste #poradyfinansowe #budzet #inwestowanie #pieniadze #viral #fyp #trending #mindset #sukces`,
+        tags: Array.from({length: 25}, (_,i) => ['oszczedzanie','finanseosobiste','poradyfinansowe','budzet','inwestowanie','pieniadze','viral','fyp','trending','mindset','sukces','wolnoscfinansowa','oszczednosci','rozwoj','motywacja','codziennosc','tworcaobrazu','reels','finanse','bogactwo','dodatkowyzarobek','przedsiebiorca','pieniadzedladomu','planbudzetu','oszczednosciowo'][i]) }
+    }
+  };
+  return T[lang] || T.vi;
+}
+
 function runAI() {
   document.getElementById('ai-start').style.display = 'none';
   document.getElementById('ai-loading').style.display = 'block';
@@ -1017,34 +1101,17 @@ function runAI() {
 function showAIResults() {
   document.getElementById('ai-loading').style.display = 'none';
   const title = document.getElementById('input-title').value || 'Bẫy tiêu dùng — Tại sao bạn luôn hết tiền?';
+  const epNum = Math.floor(Math.random()*20)+1;
+  aiDataAll = { vi: buildContent('vi', title, epNum), en: buildContent('en', title, epNum), pl: buildContent('pl', title, epNum) };
+  currentLang = Object.keys(languages).find(l => languages[l]) || 'vi';
+  aiData = aiDataAll[currentLang];
+  renderLangTabs('ai-lang-tabs');
+  renderLangTabs('preview-lang-tabs');
+  renderAIResultsForCurrentLang();
+}
+function renderAIResultsForCurrentLang() {
+  const content = aiDataAll[currentLang] || {};
   const activePlatforms = Object.keys(platforms).filter(k => platforms[k]);
-  const content = {
-    yt: {
-      name: 'YouTube', icon: '▶', color: '#ff0000',
-      title: `${title} | Tư Duy Tài Chính #${Math.floor(Math.random()*20)+1}`,
-      desc: `🔥 Trong video này chúng ta sẽ khám phá tại sao các chiếc bẫy tiêu dùng luôn khiến bạn hết tiền cuối tháng...\n\n⏱️ Timestamps:\n00:00 Giới thiệu\n02:30 Bẫy tiêu dùng số 1\n08:15 Luật 24 giờ\n15:40 Giải pháp thực tế\n\n👇 Subscribe để không bỏ lỡ!`,
-      tags: ['tuduytaichinh', 'quanlytien', 'taichinh', 'TVTTuDuy', 'tikhiem', 'dautu']
-    },
-    tt: {
-      name: 'TikTok', icon: 'T', color: '#69c9d0',
-      title: `Tại sao bạn LUÔN hết tiền cuối tháng? 🤔💸`,
-      desc: `Bẫy tiêu dùng nguy hiểm nhất mà ai cũng mắc phải!\nWatch till the end 👇`,
-      tags: ['tikhiem', 'taichinh', 'tuduytaichinh', 'fyp', 'viral', 'moneyadvice', 'TVT']
-    },
-    fb: {
-      name: 'Facebook', icon: 'f', color: '#1877f2',
-      title: `${title}`,
-      desc: `💡 Bạn có biết tại sao dù cố gắng tiết kiệm nhưng tài khoản vẫn về 0 cuối tháng?\n\nTrong video hôm nay mình chia sẻ 5 bẫy tiêu dùng cực kỳ nguy hiểm và cách thoát ra...\n\n👉 Xem video và để lại bình luận bạn đang mắc phải bẫy nào nhé!\n#TVTTuDuy #TaiChinh #TuDuy`,
-      tags: ['TVTTuDuy', 'TaiChinh', 'TuDuy', 'QuanLyTien']
-    },
-    ig: {
-      name: 'Instagram', icon: '📸', color: '#e1306c',
-      title: `Bẫy tiêu dùng 💸`,
-      desc: `Tại sao bạn LUÔN hết tiền? 🤔\nWatch video đầy đủ trên YouTube!\n.\n.\n.\n#tikhiem #taichinh #tuduytaichinh #quanlytien #dautu #money #moneyadvice #viral #fyp #trending #TVTTuDuy #vietnam #lifestyle #success #mindset`,
-      tags: Array.from({length: 25}, (_,i) => ['tikhiem','taichinh','tuduytaichinh','quanlytien','dautu','money','moneyadvice','viral','fyp','trending','TVTTuDuy','vietnam','lifestyle','success','mindset','richlife','financialfreedom','savemoney','budget','investing','growth','motivate','dailylife','contentcreator','reels'][i])
-    }
-  };
-  aiData = content;
   const results = document.getElementById('ai-results');
   results.innerHTML = activePlatforms.map(pl => `
     <div class="ai-result">
@@ -1070,13 +1137,30 @@ function showAIResults() {
     </div>
   `).join('');
 }
+function renderLangTabs(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const activeLangs = Object.keys(languages).filter(l => languages[l]);
+  if (activeLangs.length <= 1) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.style.display = 'flex';
+  el.innerHTML = activeLangs.map(l => `<div class="tab${l===currentLang?' active':''}" onclick="switchLang(this,'${l}')">${LANG_LABELS[l]}</div>`).join('');
+}
+function switchLang(el, lang) {
+  currentLang = lang;
+  aiData = aiDataAll[lang] || {};
+  renderLangTabs('ai-lang-tabs');
+  renderLangTabs('preview-lang-tabs');
+  if (document.getElementById('ai-results').innerHTML) renderAIResultsForCurrentLang();
+  if (document.getElementById('pane-3').style.display !== 'none') renderPreview(currentPreviewPl);
+}
 function removeHashtag(el) { el.style.opacity = '0.3'; el.style.textDecoration = 'line-through'; }
 function regenPlatform(pl) { toast('🔄', 'Đang tạo lại...', 'AI đang tối ưu cho ' + pl.toUpperCase()); }
 
 // ====== Preview ======
 function switchPreview(el, pl) {
-  document.querySelectorAll('#pane-3 .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#pane-3 .tabs:not(#preview-lang-tabs) .tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
+  currentPreviewPl = pl;
   renderPreview(pl);
 }
 function renderPreview(pl) {
