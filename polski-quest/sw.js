@@ -1,6 +1,6 @@
 // Offline cache cho bản web. Đổi VERSION mỗi lần phát hành để người dùng nhận bản mới.
 const VERSION = 'v1';
-const CACHE = 'lang-quest-' + VERSION;
+const CACHE = 'canh-cut-quest-' + VERSION;
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -8,7 +8,7 @@ self.addEventListener('install', e => {
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys()
-    .then(keys => Promise.all(keys.filter(k => k.startsWith('lang-quest-') && k !== CACHE).map(k => caches.delete(k))))
+    .then(keys => Promise.all(keys.filter(k => k.startsWith('canh-cut-quest-') && k !== CACHE).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 // Ưu tiên mạng cho trang chính (luôn lấy bản mới nhất), rơi về cache khi mất mạng.
