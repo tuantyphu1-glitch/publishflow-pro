@@ -1,0 +1,16 @@
+{
+  "name": "Language Quest",
+  "short_name": "LangQuest",
+  "description": "Vừa học vừa chơi: học tiếng Ba Lan, Anh, Đức, Séc cho người Việt.",
+  "lang": "vi",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#08214e",
+  "theme_color": "#08214e",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
