@@ -1,0 +1,59 @@
+DOUBLE KICKFLIP 720 - ANIMATION REPORT  (stage: PREVIEW, waiting for approval)
+Date: 2026-11-23
+
+FILES (folder WHATIF_SKATE_TEST/ on branch ccr-5638e48c-c993tw)
+- Double_Kickflip_720.blend          new project (240 frames, 30 fps, 1920x1080 output settings)
+- Double_Kickflip_720_preview.mp4    preview 854x480, H.264, 30 fps, 240 frames, 8.0 s
+- Double_Kickflip_720_final.mp4      NOT RENDERED YET - waiting for preview approval
+- backup/skateboard_360_v2_backup.blend, backup/build_scene_v2_backup.py   backup before changes
+- skateboard_360.blend               previous project, left untouched
+- build_kickflip.py / check_kickflip.py   build script / automated QA (reproducible)
+
+WHAT CHANGED
+- Character v2 kept: head, face, colours, hoodie, shoes, board, skatepark unchanged.
+- Legs lengthened: LEG_SCALE 1.20 -> thigh +18.2 %, shin +19.1 %, leg +18.7 %.
+  Hips, torso, arms and head moved up 0.094 m; head size and face unchanged.
+  Rig: hip/knee/ankle bones rebuilt longer, knee pole raised, IK pole angle recalibrated.
+- Small model fix: shin cylinder tip shortened (it poked 3 mm through the shoe sole).
+- New control BOARD_Ctrl (pivot on the board's long axis) so the board moves
+  independently from the character: height, ollie pitch, 720 deg kickflip.
+  Feet (foot_IK bones) are animated: slide up the nose during the ollie, lift clear
+  during the flip, re-catch the deck.
+
+TIMELINE
+  1-61    ride, crouch progressively (anticipation)
+  62-90   pop (velocity break at 62), ollie pitch -10 deg, feet lift away from the board
+  89-153  board flips 720 deg around its nose-tail axis (slow-in, fast middle, slow-out)
+  146-160 feet come down, board rises -> catch at frame 160 (both feet on the deck)
+  160-180 falling on the board, legs extend
+  181     impact: all 4 wheels on the ground, velocity break
+  181-216 knees absorb (compress 189, rebound 204, settle 216), keep rolling, smile
+Air time 63-180 (3.9 s) = stylised hang time required by the timeline (real ~0.8 s).
+
+AUTOMATED QA (check_kickflip.py, all 240 frames)            RESULT
+1 Legs lengthened 15-20 %       leg x1.187 (thigh x1.182, shin x1.191)   PASS
+2 Board flips exactly 720 deg   measured 720.00 deg, frames 91-152       PASS
+3 Body does not rotate          body rotation 0.000 deg (torso lean max 42.5 deg)  PASS
+4 Feet catch before landing     catch frame 160, landing 181 (21 frames earlier)  PASS
+5 Four wheels touch on landing  wheel bottoms 0.000 / 0.000 / 0.000 / 0.000 m   PASS
+6 Camera framing                min margin 9.7 % of frame (worst frame 71)       PASS
++ No character/board interpenetration (all frames)                      PASS
++ No floor penetration (character min z 0.104 m, board min z 0.000 m)  PASS
++ No foot sliding on the deck (before pop and after catch: 0.0 mm)      PASS
+
+RENDER CONFIGURATION
+- Blender 5.3.0 (bpy module), Eevee; Vulkan via Mesa lavapipe = software GPU on CPU
+- Intel Xeon 2.1 GHz, 4 vCPU, 15 GB RAM (cloud container, not the user's Mac)
+- AgX "Punchy"; preview: 864x486 rendered (45 %), scaled to 854x480; 4 samples; no motion blur
+- Preview render time: avg 5.41 s/frame, max 9.4 s, sum 1298 s; wall clock 1308 s (21.8 min)
+- 6 renderer crashes (segfault inside lavapipe), auto-resumed, no frame lost
+- Final plan: 1920x1080, 32 samples, motion blur 0.35. Estimated ~1-1.5 min/frame => ~4-6 h.
+
+KNOWN LIMITATIONS / NOTES
+- Stylised hang time (3.9 s airborne) because the timeline puts 60 frames of flip in the air.
+- During the flip the board is ~0.18 m below the soles (safety clearance so the rotating
+  board never touches the shoes); could be reduced to ~0.12 m if a tighter look is wanted.
+- Compared with the original design sheet: the sheet's legs are even longer (~half the
+  body height), it has no separate shorts, and eyes/eyebrows are smaller/thinner.
+  These were NOT changed because the brief asked to keep the v2 character.
+- Rigid-part rig (no skinned mesh): elbows/knees are overlapping parts.

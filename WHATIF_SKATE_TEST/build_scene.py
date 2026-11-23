@@ -407,20 +407,33 @@ def bone(name, head, tail, parent=None, connect=False, deform=False):
 
 
 ANK = DECK + 0.066
+# Leg length control. LEG_SCALE = 1.0 reproduces the original v2 character;
+# build_kickflip.py sets 1.22 (thigh +18%, shin +15%). Everything above the hips
+# (torso, arms, head) is moved up by DZ, sizes are unchanged.
+LEG_SCALE = globals().get("LEG_SCALE", 1.0)
+DZ = (0.64 - ANK) * (LEG_SCALE - 1.0)
+UPPER_SHIFT = {"hips", "spine", "chest", "neck", "head"}
+
+
+def up(p):
+    return (p[0], p[1], p[2] + DZ)
+
+
 bone("root", (0, 0, 0), (0, 0.35, 0))
-bone("hips", (0, 0, 0.60), (0, 0, 0.76), "root")
-bone("spine", (0, 0, 0.76), (0, 0, 0.92), "hips", True)
-bone("chest", (0, 0, 0.92), (0, 0, 1.06), "spine", True)
-bone("neck", (0, 0, 1.06), (0, 0, 1.12), "chest", True)
-bone("head", (0, 0, 1.12), (0, 0, 1.42), "neck", True)
+bone("hips", up((0, 0, 0.60)), up((0, 0, 0.76)), "root")
+bone("spine", up((0, 0, 0.76)), up((0, 0, 0.92)), "hips", True)
+bone("chest", up((0, 0, 0.92)), up((0, 0, 1.06)), "spine", True)
+bone("neck", up((0, 0, 1.06)), up((0, 0, 1.12)), "chest", True)
+bone("head", up((0, 0, 1.12)), up((0, 0, 1.42)), "neck", True)
 for s, sg in (("L", 1), ("R", -1)):
-    bone(f"upper_arm.{s}", (0.15 * sg, 0, 1.03), (0.29 * sg, 0.0, 0.87), "chest")
-    bone(f"forearm.{s}", (0.29 * sg, 0.0, 0.87), (0.40 * sg, -0.04, 0.72), f"upper_arm.{s}", True)
-    bone(f"hand.{s}", (0.40 * sg, -0.04, 0.72), (0.44 * sg, -0.05, 0.66), f"forearm.{s}", True)
-    bone(f"thigh.{s}", (0.085 * sg, 0, 0.64), (0.165 * sg, -0.075, 0.405), "hips")
-    bone(f"shin.{s}", (0.165 * sg, -0.075, 0.405), (0.22 * sg, 0, ANK), f"thigh.{s}", True)
+    bone(f"upper_arm.{s}", up((0.15 * sg, 0, 1.03)), up((0.29 * sg, 0.0, 0.87)), "chest")
+    bone(f"forearm.{s}", up((0.29 * sg, 0.0, 0.87)), up((0.40 * sg, -0.04, 0.72)), f"upper_arm.{s}", True)
+    bone(f"hand.{s}", up((0.40 * sg, -0.04, 0.72)), up((0.44 * sg, -0.05, 0.66)), f"forearm.{s}", True)
+    knee = (0.165 * sg, -0.075 * LEG_SCALE, ANK + (0.405 - ANK) * LEG_SCALE)
+    bone(f"thigh.{s}", up((0.085 * sg, 0, 0.64)), knee, "hips")
+    bone(f"shin.{s}", knee, (0.22 * sg, 0, ANK), f"thigh.{s}", True)
     bone(f"foot_IK.{s}", (0.22 * sg, 0, ANK), (0.22 * sg, -0.12, ANK), "root")
-    bone(f"knee_pole.{s}", (0.26 * sg, -0.9, 0.45), (0.26 * sg, -0.9, 0.55), "root")
+    bone(f"knee_pole.{s}", (0.26 * sg, -0.9, 0.45 + DZ / 2), (0.26 * sg, -0.9, 0.55 + DZ / 2), "root")
 bpy.ops.object.mode_set(mode="OBJECT")
 
 for pb in rig.pose.bones:
@@ -457,6 +470,8 @@ for pb in rig.pose.bones:
 
 def attach(ob, bname):
     """rigid-parent an object (built in rest-pose world space) to a bone"""
+    if bname in UPPER_SHIFT:          # parts modelled at v2 heights follow the raised torso
+        ob.location.z += DZ
     b = rig.data.bones[bname]
     pm = b.matrix_local @ Matrix.Translation((0, b.length, 0))
     ob.parent = rig
@@ -841,7 +856,7 @@ for s, sg in (("L", 1), ("R", -1)):
     attach(sphere(f"Shorts_Hem_{s}", hp + (kn - hp) * 0.48, (1, 1, 0.42), r=0.084, mat=M["hoodie_dark"],
                   rot=Vector((0, 0, 1)).rotation_difference(kn - hp)), f"thigh.{s}")
     attach(sphere(f"Knee_{s}", kn, r=0.044, mat=M["skin"]), f"shin.{s}")
-    attach(segment(f"Shin_{s}", kn, an + Vector((0, 0, -0.03)), 0.039, M["skin"]), f"shin.{s}")
+    attach(segment(f"Shin_{s}", kn, an + Vector((0, 0, -0.012)), 0.039, M["skin"]), f"shin.{s}")
 
     # ---- chunky sneaker (toe -> -Y), sole flat on the deck
     fx = 0.22 * sg
