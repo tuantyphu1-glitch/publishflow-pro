@@ -5,7 +5,8 @@ import numpy as np
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Vector
 
-blend, out = sys.argv[1], sys.argv[2]
+ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
+blend, out = ARGS[0], ARGS[1]
 bpy.ops.wm.open_mainfile(filepath=blend)
 s = bpy.context.scene
 cam = s.camera

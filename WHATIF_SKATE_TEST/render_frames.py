@@ -1,7 +1,8 @@
 """Render frames from skateboard_360.blend.
 python render_frames.py <blend> <outdir> <percent> <samples> <motionblur 0/1> <frames: 'a-b' or 'a,b,c'>"""
 import bpy, sys, os, time
-blend, outdir, pct, spp, mb, frames = sys.argv[1:7]
+ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
+blend, outdir, pct, spp, mb, frames = ARGS[0:6]
 bpy.ops.wm.open_mainfile(filepath=blend)
 s = bpy.context.scene
 s.render.resolution_percentage = int(pct)

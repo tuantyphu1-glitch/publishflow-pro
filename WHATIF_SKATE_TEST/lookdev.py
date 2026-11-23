@@ -2,9 +2,10 @@
 python lookdev.py <blend> <outdir> [percent] [samples]"""
 import bpy, sys, os, math
 from mathutils import Vector, Euler
-blend, outdir = sys.argv[1], sys.argv[2]
-pct = int(sys.argv[3]) if len(sys.argv) > 3 else 100
-spp = int(sys.argv[4]) if len(sys.argv) > 4 else 64
+ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
+blend, outdir = ARGS[0], ARGS[1]
+pct = int(ARGS[2]) if len(ARGS) > 2 else 100
+spp = int(ARGS[3]) if len(ARGS) > 3 else 64
 bpy.ops.wm.open_mainfile(filepath=blend)
 s = bpy.context.scene
 for name in ("CTRL_Master", "RIG_Character", "Camera", "CAM_Target"):

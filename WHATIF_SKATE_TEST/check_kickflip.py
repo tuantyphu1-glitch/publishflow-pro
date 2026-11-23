@@ -8,7 +8,8 @@ import numpy as np
 from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
 
-blend, ref_blend, out = sys.argv[1:4]
+ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
+blend, ref_blend, out = ARGS[0:3]
 DECK = 0.104
 
 # ---- reference leg length (v2)
