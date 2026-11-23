@@ -57,3 +57,18 @@ KNOWN LIMITATIONS / NOTES
   body height), it has no separate shorts, and eyes/eyebrows are smaller/thinner.
   These were NOT changed because the brief asked to keep the v2 character.
 - Rigid-part rig (no skinned mesh): elbows/knees are overlapping parts.
+
+FINAL RENDER 1920x1080 (Mac mini M4) - 2026-11-23
+- File: WHATIF_SKATE_TEST/Double_Kickflip_720_final.mp4 - H.264 yuv420p crf 17, 1920x1080, 30 fps, 240 frames, 8.000 s, 3.9 MB (ffprobe verified)
+- Machine: Mac mini, Apple M4, 24 GB RAM, macOS (Darwin 25.5), Blender 5.3.0 (build 2026-11-10) from external drive /Volumes/Lexar 2TB Data/Blender/Blender.app; ffmpeg 8.1.1
+- Renderer: Eevee on the Apple GPU (Metal), 32 samples, motion blur 0.35, via render_frames.py (percent 100, frames 1-240)
+- Render time (measured): 788.7 s total = 13 min 9 s for 240 frames; avg 3.28 s/frame, max 3.9 s. (Cloud estimate was 4-6 h on CPU.)
+- Errors: none, no crashes, no frame lost. First attempt of a single test frame (f100) took 12 s incl. shader compile.
+- Visual check of frames 90 (board leaving feet), 121 (board mid-flip), 160 (feet catching board), 189 (landing, knees absorbing): no visible artefacts.
+
+VOICE-OVER (EP01)
+- File: CHANNEL/episodes/EP01_double_kickflip/EP01_final_voice.mp4 (video copy + AAC 192k, 8.000 s), subtitles EP01.srt, script make_voice.sh
+- Voice: Daniel (en_GB, male), macOS built-in `say`, offline, rate 190 wpm. No Enhanced/Premium male voice installed on this Mac.
+- Lines: [0.5] "Easy now. Here we go." (0.5-2.12 s) / [2.3] "Pop it! Double kickflip!" (2.3-3.88 s) / [5.2] "Caught it. Smooth landing!" (5.2-6.82 s)
+- Change vs brief: line 1 was "Okay... low and steady. Here we go." (2.4-3.1 s at any rate), which would overlap line 2 at 2.3 s; shortened and logged here.
+- Loudness normalised loudnorm I=-16 TP=-1.5; each line ends before the next and before 8 s (silencedetect checked).
