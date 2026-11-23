@@ -1,0 +1,49 @@
+WHATIF SKATE TEST - PREVIEW REPORT (animation test, character v2 NOT approved yet)
+Date: 2026-11-23
+Source: skateboard_360.blend (unchanged in this step; md5 64b8aa8db2965409a4159c1e4e0336f5)
+Character, rig and animation were NOT modified for this preview.
+
+CONFIGURATION
+- Blender: bpy 5.3.0 (Blender as a Python module, PyPI), engine BLENDER_EEVEE (Eevee Next)
+- GPU backend: Vulkan via Mesa lavapipe (software rasteriser on CPU) - no physical GPU
+- CPU: Intel Xeon @ 2.10GHz, 4 vCPU; RAM 15 GB; Linux container
+- Colour: AgX, look "AgX - Punchy"
+- Encoding: ffmpeg libx264, yuv420p, 30 FPS
+
+PREVIEW 1 - preview_f151-390_480x270.mp4
+- Frames 151-390 (240 frames, 8.0 s): pop, rise, 360 spin, landing, recovery
+- 480x270 (25%), Eevee 4 samples, motion blur OFF (speed priority)
+- Pure render time per frame: avg 4.24 s, max 9.7 s, total 1017 s (~17 min)
+- Wall clock incl. scene reloads: 1060 s (~17.7 min)
+- Renderer crashes: 6 segfaults inside the lavapipe driver (libc), random frames.
+  Render resumed automatically from the last saved frame; no frame lost.
+
+PREVIEW 2 - preview_spin_f236-295_720p.mp4
+- Frames 236-295 (60 frames, 2.0 s): middle of the 360 spin
+- Rendered 1286x723 (67%), scaled to 1280x720; Eevee 16 samples, motion blur ON (shutter 0.35)
+- Pure render time per frame: avg 19.98 s, max 23.1 s, total 1199 s (~20 min)
+- Wall clock incl. reloads: 1235 s (~20.6 min)
+- Renderer crashes: 4 (auto-resumed, no frame lost)
+
+ESTIMATE FOR THE FULL FILM (450 frames) - not rendered
+- 1080p / 16 samples / motion blur: ~45 s per frame (extrapolated from 720p x2.25) => ~5.5-6 h
+- 1080p / 48 samples (look-dev quality): ~1.5-2 min per frame => ~11-15 h
+
+AUTOMATED QA (check_animation.py, whole 450 frames)
+- Lowest point of character+board: 0.000 m (no floor penetration)
+- Grounded frames: wheel bottoms at 0.0000-0.0001 m (all 4 wheels touch on landing, frame 361)
+- Foot drift on deck: < 0.003 mm (feet locked to board via IK)
+- IK chain gap: < 0.06 mm (legs never over-stretched)
+- Airborne: frames 159-360, apex 0.95 m, spin ends exactly at 360 deg
+- Camera framing: minimum margin 2.7% (head, feet and board always inside frame)
+
+OBSERVATIONS FROM THE PREVIEW (for review, not yet changed)
+1. Air time is 6.7 s, as the brief's timeline requires (jump 151-210, spin 211-300,
+   landing prep 301-360). It plays as stylised slow motion / hang time;
+   a physically real ollie of this height lasts ~0.9 s.
+2. The camera rises with the character, so the jump height reads weaker than 0.95 m;
+   a ground shadow or a lower, less-following camera would show the height better.
+3. Back view during the spin (frame ~258): hoodie back and shorts look like simple
+   rounded tubes/blobs - the hood back and seat need more modelling detail.
+4. Rigid-part rig: elbows/knees are overlapping parts, not a continuous skinned mesh.
+5. 480x270 with 4 samples shows aliasing and noise - expected for a motion check only.
