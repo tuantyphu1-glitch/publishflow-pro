@@ -1,15 +1,15 @@
 # Quy trình sản xuất video kênh: ChatGPT (ảnh) → Claude Code trên Mac (Blender 3D) → MP4
 
 Mục tiêu: mỗi tập video dùng **cùng một nhân vật 3D** (đầu cầu trắng, hoodie xanh), chuyển động
-chính xác, render trên Mac mini M4. ChatGPT tạo **ảnh tham chiếu**; Claude dựng **mô hình và chuyển động 3D thật**
+chính xác, render trên Mac mini M4, **có giọng đọc tiếng Anh giọng NAM** (voice-over) và phụ đề tiếng Anh. ChatGPT tạo **ảnh tham chiếu**; Claude dựng **mô hình và chuyển động 3D thật**
 trong Blender. Ảnh ChatGPT không bao giờ được đưa thẳng vào video như nhân vật.
 
 Phân vai:
 | Ai | Làm gì |
 |---|---|
 | Người dùng | Viết ý tưởng tập, tạo ảnh bằng ChatGPT, đặt file đúng thư mục, duyệt preview |
-| ChatGPT | Ảnh thiết kế nhân vật (một lần), storyboard, bối cảnh, thumbnail (mỗi tập) |
-| Claude Code (Mac) | Dựng/cập nhật nhân vật 3D, bối cảnh, animation, camera, kiểm tra tự động, render, báo cáo |
+| ChatGPT | Ảnh thiết kế nhân vật (một lần), storyboard, bối cảnh, thumbnail, **lời thoại tiếng Anh** (mỗi tập) |
+| Claude Code (Mac) | Dựng/cập nhật nhân vật 3D, bối cảnh, animation, camera, **giọng đọc nam tiếng Anh + phụ đề**, kiểm tra tự động, render, báo cáo |
 
 ---
 
@@ -35,12 +35,15 @@ CHANNEL/
       location.png              <- ChatGPT (mục C.7), tuỳ chọn
       location_top.png          <- ChatGPT, tuỳ chọn
       thumbnail.png             <- ChatGPT (mục C.8), dùng trực tiếp cho YouTube/Facebook
+      narration.md              <- ChatGPT (mục C.9): lời thoại tiếng Anh theo mốc thời gian
       --- Claude tạo ---
       EP01.blend
       build_EP01.py
       check_EP01.py
-      EP01_preview.mp4          <- 854x480, để duyệt
-      EP01_final.mp4            <- 1920x1080 sau khi duyệt
+      voice/                    <- file giọng đọc từng câu (wav) + voiceover.wav đã ghép
+      EP01.srt                  <- phụ đề tiếng Anh
+      EP01_preview.mp4          <- 854x480 CÓ giọng đọc, để duyệt
+      EP01_final.mp4            <- 1920x1080 + giọng đọc (AAC) sau khi duyệt
       report.txt
 ```
 `render_*/` (thư mục PNG từng frame) **không commit**, thêm vào `.gitignore`.
@@ -124,6 +127,17 @@ YouTube thumbnail 1280x720 of the same character doing [hành động chính], e
 dynamic angle, bright high-contrast colours, large empty area on the right for title text.
 ```
 
+**C.9 Lời thoại tiếng Anh → `narration.md`**
+```
+Write a short English voice-over for a [8]-second 3D cartoon clip: [dán phần "Câu chuyện" + "Chuyển động theo frame" của brief].
+Narrator: friendly, energetic young MALE voice, simple English for a general audience.
+Hard limit: about 2.3 words per second of video (max [18] words in total), leave the first 0.5 s silent.
+Split it into 2-4 lines, each with a start time in seconds matching the action, in this exact format:
+[00.5] line one
+[03.0] line two
+No emojis, no sound-effect words, no stage directions.
+```
+
 ---
 
 ## D. Mẫu `brief.md` cho mỗi tập (người dùng điền)
@@ -149,10 +163,17 @@ Frame 181–240: ...
 ## Camera
 [Mở đầu góc ... / theo nhân vật / kết thúc góc rộng ...]
 
+## Giọng đọc (tiếng Anh, giọng NAM)
+Nguồn lời thoại: narration.md (ChatGPT, mục C.9), hoặc viết trực tiếp ở đây:
+[00.5] ...
+[03.0] ...
+Phong cách: [vui, năng động / bình tĩnh / hài hước]  ·  Âm nhạc nền: [không / có, nhỏ]
+
 ## Điều kiện bắt buộc (sẽ được kiểm tra tự động)
 - [Ví dụ: ván xoay đúng 720°, cơ thể không xoay theo ván]
 - [Ví dụ: cả 4 bánh chạm đất khi tiếp đất]
 - Không xuyên vật thể, chân không trượt, camera không cắt đầu/chân/ván
+- Giọng đọc nam tiếng Anh, không câu nào vượt quá thời lượng video
 
 ## Ghi chú thêm
 [Nhạc, chữ, độ dài khác...]
@@ -193,6 +214,26 @@ Frame 181–240: ...
    xem lại vài frame quan trọng, viết `report.txt`.
 7. Commit (không commit thư mục PNG) và push lên nhánh `ccr-5638e48c-c993tw`.
 
+**Bước 2b: Giọng đọc tiếng Anh giọng NAM (làm cùng bước 2.4, trước khi gửi preview)**
+1. Lấy lời thoại từ `narration.md` (hoặc mục "Giọng đọc" trong brief). Chỉ dùng tiếng Anh.
+2. Tạo giọng bằng một trong hai cách, ưu tiên cách (a):
+   a. **macOS offline (miễn phí):** liệt kê giọng: `say -v '?' | grep -E 'en_(US|GB|AU)'`.
+      Chọn giọng NAM chất lượng cao nhất đang có, thứ tự ưu tiên: bản *Premium/Enhanced* (vd. Evan, Nathan, Tom, Aaron)
+      → Alex / Daniel → Reed / Rocko / Eddy. Nếu chưa có bản Enhanced, nhắc người dùng tải trong
+      *System Settings → Accessibility → Spoken Content → System Voice → Manage Voices*.
+      Mỗi câu: `say -v "<Voice>" -r 175 -o voice/line_01.aiff "<text>"` rồi
+      `ffmpeg -i voice/line_01.aiff -ar 48000 -ac 1 voice/line_01.wav`.
+   b. **API TTS chất lượng cao** (chỉ khi người dùng cung cấp key qua biến môi trường, KHÔNG ghi key vào repo):
+      ví dụ OpenAI TTS (giọng nam "onyx"/"echo") hoặc ElevenLabs (chọn giọng nam). Ghi rõ dịch vụ đã dùng trong report.
+3. Đặt từng câu đúng mốc thời gian (`ffmpeg ... -af adelay=<ms>` rồi `amix`) thành `voice/voiceover.wav`
+   dài đúng bằng video; chuẩn hoá âm lượng `loudnorm=I=-16:TP=-1.5`.
+4. Kiểm tra tự động: mỗi câu kết thúc trước câu sau và trước khi hết video (đo bằng `ffprobe`);
+   nếu dài quá, tăng `-r` (tối đa ~200) hoặc rút gọn câu và ghi lại.
+5. Tạo phụ đề `EPxx.srt` từ cùng mốc thời gian.
+6. Ghép vào video: `ffmpeg -i video.mp4 -i voice/voiceover.wav -c:v copy -c:a aac -b:a 192k -shortest EPxx_preview.mp4`
+   (bản final làm tương tự). Tuỳ chọn: thêm phụ đề mềm `-i EPxx.srt -c:s mov_text`.
+7. Ghi trong report: tên giọng, nguồn TTS, tốc độ đọc, thời lượng từng câu.
+
 **Bước 3: Thư viện động tác**
 - Sau mỗi tập, lưu các tư thế/động tác dùng lại được (dạng hàm Python trả về keyframe) vào `CHANNEL/library/`
   để các tập sau dựng nhanh hơn.
@@ -202,6 +243,7 @@ Frame 181–240: ...
 - Không dùng ảnh phẳng làm nhân vật. Ảnh ChatGPT chỉ là tham chiếu (và thumbnail).
 - Không render Full HD trước khi preview được duyệt.
 - Báo cáo trung thực: lỗi, giới hạn, thời gian render thực tế, cấu hình máy.
+- **Giọng đọc luôn là tiếng Anh, giọng NAM.** Không dùng giọng nữ, không dùng tiếng Việt trong video.
 
 ---
 
@@ -217,7 +259,8 @@ render 3 góc look-dev và chờ tôi duyệt.
 **Mỗi tập:**
 ```
 Đọc WHATIF_SKATE_TEST/PIPELINE_CHATGPT_TO_VIDEO.md. Làm Bước 2 cho tập CHANNEL/episodes/EP02_[tên]/
-(brief.md + storyboard.png + location.png). Dừng sau preview 480p và báo kết quả kiểm tra cho tôi duyệt.
+(brief.md + storyboard.png + location.png + narration.md). Video có giọng đọc tiếng Anh giọng NAM và phụ đề.
+Dừng sau preview 480p (có giọng đọc) và báo kết quả kiểm tra cho tôi duyệt.
 ```
 
 **Sau khi duyệt preview:**

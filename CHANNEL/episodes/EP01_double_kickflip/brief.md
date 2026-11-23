@@ -18,11 +18,25 @@ Frame 181–240: tiếp đất bằng 4 bánh, khuỵu gối giảm lực, tiế
 ## Camera
 Góc 3/4, theo dõi nhân vật, luôn thấy toàn bộ nhân vật và ván.
 
+## Giọng đọc (tiếng Anh, giọng NAM)  - CHƯA làm cho EP01, ví dụ:
+[00.5] Okay... low and steady. Here we go.
+[02.3] Pop it! Double kickflip!
+[05.2] Caught it. Smooth landing!
+Phong cách: vui, năng động
+
+## Giọng đọc (tiếng Anh, giọng NAM): CHƯA làm cho EP01, ví dụ:
+[00.5] Okay... low and steady. Here we go.
+[02.3] Pop it! Double kickflip!
+[05.2] Caught it. Smooth landing!
+Phong cách: vui, năng động
+
 ## Điều kiện bắt buộc (kiểm tra tự động)
 - Chân dài thêm 15–20 %
 - Ván xoay đúng 720°, cơ thể không xoay theo ván
 - Chân bắt lại ván trước khi tiếp đất; 4 bánh chạm đất khi tiếp đất
 - Không xuyên vật thể, chân không trượt, camera không cắt đầu/chân/ván
+- Giọng đọc nam tiếng Anh, không câu nào vượt quá thời lượng video
+- Giọng đọc nam tiếng Anh, không câu nào vượt quá thời lượng video
 
 ## Kết quả
 WHATIF_SKATE_TEST/Double_Kickflip_720.blend, Double_Kickflip_720_preview.mp4, animation_report.txt
