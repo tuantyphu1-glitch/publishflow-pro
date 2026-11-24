@@ -68,7 +68,7 @@ FINAL RENDER 1920x1080 (Mac mini M4) - 2026-11-23
 
 VOICE-OVER (EP01)
 - File: CHANNEL/episodes/EP01_double_kickflip/EP01_final_voice.mp4 (video copy + AAC 192k, 8.000 s), subtitles EP01.srt, script make_voice.sh
-- Voice: Evan (Enhanced) (en_US, male), macOS built-in `say`, offline, rate 185 wpm (downloaded 2026-11-24, 257.6 MB; replaced the earlier standard voice Daniel en_GB).
-- Lines: [0.5] "Easy now. Here we go." (0.5-2.05 s) / [2.3] "Pop it! Double kickflip!" (2.3-3.88 s) / [5.2] "Caught it. Smooth landing!" (5.2-6.75 s)
+- Voice: Nathan (Enhanced) (en_US, male), macOS built-in `say`, offline, rate 185 wpm (downloaded 2026-11-24, 118.6 MB; chosen by the user after comparing Daniel, Evan, Nathan, Tom).
+- Lines: [0.5] "Easy now. Here we go." (0.5-2.17 s) / [2.3] "Pop it! Double kickflip!" (2.3-3.93 s) / [5.2] "Caught it. Smooth landing!" (5.2-6.86 s)
 - Change vs brief: line 1 was "Okay... low and steady. Here we go." (2.4-3.1 s at any rate), which would overlap line 2 at 2.3 s; shortened and logged here.
 - Loudness normalised loudnorm I=-16 TP=-1.5; each line ends before the next and before 8 s (silencedetect checked).
