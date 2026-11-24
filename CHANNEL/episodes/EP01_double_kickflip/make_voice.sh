@@ -1,8 +1,8 @@
 #!/bin/bash
-# Giọng đọc EP01: macOS say, giọng nam Daniel (en_GB), offline. Chạy trong thư mục này.
+# Giọng đọc EP01: macOS say, giọng nam Evan Enhanced (en_US), offline. Chạy trong thư mục này.
 set -e
 cd "$(dirname "$0")"; mkdir -p voice
-VOICE="Daniel"; RATE=190; DUR=8
+VOICE="Evan (Enhanced)"; RATE=185; DUR=8
 T=("0.5|Easy now. Here we go." "2.3|Pop it! Double kickflip!" "5.2|Caught it. Smooth landing!")
 INPUTS=(); FILTER=""; i=0
 for e in "${T[@]}"; do

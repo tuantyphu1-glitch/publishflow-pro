@@ -1,5 +1,5 @@
 1
-00:00:00,500 --> 00:00:02,120
+00:00:00,500 --> 00:00:02,050
 Easy now. Here we go.
 
 2
@@ -7,5 +7,5 @@ Easy now. Here we go.
 Pop it! Double kickflip!
 
 3
-00:00:05,200 --> 00:00:06,820
+00:00:05,200 --> 00:00:06,750
 Caught it. Smooth landing!
